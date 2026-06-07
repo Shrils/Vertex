@@ -9,6 +9,7 @@
 </p>
 
 <p align="center">
+  <a href="https://shrils.github.io/Vertex/"><strong>Live Preview</strong></a> &bull;
   <a href="#features">Features</a> &bull;
   <a href="#quick-start">Quick Start</a> &bull;
   <a href="#customization">Customization</a> &bull;
@@ -26,8 +27,28 @@ Vertex is a **complete, production-ready landing page** built with vanilla HTML,
 
 <br />
 
+## Live Preview
+
+**https://shrils.github.io/Vertex/**
+
+See the landing page in action before you clone it. The live demo shows the full experience -- rotating hero text, strategy cards with charts, addons marketplace, and newsletter signup.
+
+<br />
+
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Shrils/vertex/main/docs/hero-preview.svg" alt="Hero section preview" width="800" />
+  <img src="https://raw.githubusercontent.com/Shrils/Vertex/main/docs/hero-preview.svg" alt="Hero section preview" width="800" />
+</p>
+
+<br />
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Shrils/Vertex/main/docs/strategies-preview.svg" alt="Strategies dashboard preview" width="800" />
+</p>
+
+<br />
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Shrils/Vertex/main/docs/addons-preview.svg" alt="Addons marketplace preview" width="800" />
 </p>
 
 <br />
@@ -94,7 +115,7 @@ Vertex is a **complete, production-ready landing page** built with vanilla HTML,
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/Shrils/vertex.git
+git clone https://github.com/Shrils/Vertex.git
 cd vertex
 
 # 2. Install dependencies
