@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="420" viewBox="0 0 800 420">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f2f7f7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#115e59;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f766e;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="420" rx="16" fill="url(#bgGrad)"/>
+
+  <!-- Soft glow orb -->
+  <ellipse cx="400" cy="120" rx="250" ry="80" fill="#ccfbf1" opacity="0.3"/>
+
+  <!-- Navbar bar -->
+  <rect x="0" y="0" width="800" height="52" rx="16" fill="white" opacity="0.8"/>
+  <rect x="0" y="40" width="800" height="12" fill="white" opacity="0.8"/>
+  <rect x="40" y="12" width="80" height="16" rx="3" fill="#115e59" opacity="0.15"/>
+  <circle cx="700" cy="20" r="10" fill="#115e59" opacity="0.8"/>
+
+  <!-- Hero heading -->
+  <rect x="220" y="90" width="360" height="28" rx="4" fill="#18181b" opacity="0.85"/>
+  <rect x="250" y="130" width="300" height="10" rx="2" fill="#52525b" opacity="0.5"/>
+
+  <!-- CTA buttons -->
+  <rect x="320" y="170" width="140" height="32" rx="16" fill="url(#accent)"/>
+  <rect x="475" y="170" width="110" height="32" rx="16" fill="white" stroke="#d4d4d8" stroke-width="1"/>
+
+  <!-- Feature cards (bottom) -->
+  <rect x="40" y="250" width="230" height="130" rx="12" fill="white" stroke="#ccfbf1" stroke-width="1"/>
+  <rect x="55" y="270" width="40" height="40" rx="8" fill="#115e59"/>
+  <rect x="55" y="325" width="180" height="8" rx="2" fill="#18181b" opacity="0.8"/>
+  <rect x="55" y="342" width="140" height="6" rx="2" fill="#a1a1aa" opacity="0.5"/>
+
+  <rect x="285" y="250" width="230" height="130" rx="12" fill="white" stroke="#ccfbf1" stroke-width="1"/>
+  <rect x="300" y="270" width="40" height="40" rx="8" fill="#115e59"/>
+  <rect x="300" y="325" width="180" height="8" rx="2" fill="#18181b" opacity="0.8"/>
+  <rect x="300" y="342" width="140" height="6" rx="2" fill="#a1a1aa" opacity="0.5"/>
+
+  <rect x="530" y="250" width="230" height="130" rx="12" fill="white" stroke="#ccfbf1" stroke-width="1"/>
+  <rect x="545" y="270" width="40" height="40" rx="8" fill="#115e59"/>
+  <rect x="545" y="325" width="180" height="8" rx="2" fill="#18181b" opacity="0.8"/>
+  <rect x="545" y="342" width="140" height="6" rx="2" fill="#a1a1aa" opacity="0.5"/>
+</svg>

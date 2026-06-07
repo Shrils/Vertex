@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="380" viewBox="0 0 800 380">
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f2f7f7;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="380" rx="16" fill="url(#bg2)"/>
+
+  <!-- Strategy cards -->
+  <rect x="20" y="20" width="240" height="330" rx="14" fill="white" stroke="#ccfbf1" stroke-width="1.5"/>
+  <rect x="35" y="40" width="210" height="8" rx="2" fill="#18181b" opacity="0.85"/>
+  <rect x="35" y="55" width="140" height="6" rx="2" fill="#a1a1aa" opacity="0.4"/>
+  <!-- mini chart lines -->
+  <polyline points="35,120 55,110 75,125 95,105 115,118 135,100 155,115 175,95 195,112 215,98 235,108" fill="none" stroke="#115e59" stroke-width="2" opacity="0.6"/>
+  <polyline points="35,160 55,170 75,155 95,165 115,158 135,168 155,153 175,162 195,148 215,160 235,152" fill="none" stroke="#f87171" stroke-width="1.5" opacity="0.3" stroke-dasharray="4,3"/>
+  <rect x="35" y="200" width="60" height="20" rx="5" fill="#115e59" opacity="0.9"/>
+  <rect x="105" y="200" width="60" height="20" rx="5" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <rect x="175" y="200" width="60" height="20" rx="5" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <rect x="35" y="240" width="80" height="6" rx="2" fill="#a1a1aa" opacity="0.3"/>
+  <rect x="35" y="255" width="65" height="6" rx="2" fill="#a1a1aa" opacity="0.3"/>
+
+  <rect x="280" y="20" width="240" height="330" rx="14" fill="white" stroke="#ccfbf1" stroke-width="1.5"/>
+  <rect x="295" y="40" width="210" height="8" rx="2" fill="#18181b" opacity="0.85"/>
+  <rect x="295" y="55" width="140" height="6" rx="2" fill="#a1a1aa" opacity="0.4"/>
+  <polyline points="295,110 315,115 335,100 355,118 375,95 395,115 415,105 435,118 455,100 475,112 495,108" fill="none" stroke="#115e59" stroke-width="2" opacity="0.6"/>
+  <polyline points="295,155 315,148 335,162 355,150 375,158 395,150 415,163 435,148 455,160 475,152 495,158" fill="none" stroke="#f87171" stroke-width="1.5" opacity="0.3" stroke-dasharray="4,3"/>
+  <rect x="295" y="200" width="60" height="20" rx="5" fill="#115e59" opacity="0.9"/>
+  <rect x="365" y="200" width="60" height="20" rx="5" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <rect x="435" y="200" width="60" height="20" rx="5" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <rect x="295" y="240" width="80" height="6" rx="2" fill="#a1a1aa" opacity="0.3"/>
+  <rect x="295" y="255" width="65" height="6" rx="2" fill="#a1a1aa" opacity="0.3"/>
+
+  <rect x="540" y="20" width="240" height="330" rx="14" fill="white" stroke="#ccfbf1" stroke-width="1.5"/>
+  <rect x="555" y="40" width="210" height="8" rx="2" fill="#18181b" opacity="0.85"/>
+  <rect x="555" y="55" width="140" height="6" rx="2" fill="#a1a1aa" opacity="0.4"/>
+  <polyline points="555,105 575,118 595,100 615,125 635,108 655,115 675,98 695,115 715,102 735,110 755,105" fill="none" stroke="#115e59" stroke-width="2" opacity="0.6"/>
+  <polyline points="555,165 575,158 595,170 615,160 635,165 655,155 675,168 695,152 715,165 735,155 755,162" fill="none" stroke="#f87171" stroke-width="1.5" opacity="0.3" stroke-dasharray="4,3"/>
+  <rect x="555" y="200" width="60" height="20" rx="5" fill="#115e59" opacity="0.9"/>
+  <rect x="625" y="200" width="60" height="20" rx="5" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <rect x="695" y="200" width="60" height="20" rx="5" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+  <rect x="555" y="240" width="80" height="6" rx="2" fill="#a1a1aa" opacity="0.3"/>
+  <rect x="555" y="255" width="65" height="6" rx="2" fill="#a1a1aa" opacity="0.3"/>
+</svg>

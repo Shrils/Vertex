@@ -1,0 +1,12 @@
+{
+    "name": "vertex-landing",
+    "version": "1.0.0",
+    "description": "Vertex — open-source trading strategy & addons landing page",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "express": "^4.18.2"
+    }
+}

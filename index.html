@@ -1,0 +1,2204 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vertex - Strategy Dashboard</title>
+    
+    <!-- Fonts -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+        
+        * { 
+            font-family: "Space Grotesk", sans-serif; 
+        }
+        
+        /* Hide scrollbar for cleaner look in card stats */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        /* Widget Specific Scrollbar */
+        .widget-scrollbar::-webkit-scrollbar { width: 5px; }
+        .widget-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .widget-scrollbar::-webkit-scrollbar-thumb { background: #ccdedd; border-radius: 9999px; }
+        .widget-scrollbar::-webkit-scrollbar-thumb:hover { background: #115e59; }
+        
+        /* Widget Animations */
+        @keyframes pulse-dot {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+        .typing-dot { animation: pulse-dot 1.4s infinite ease-in-out; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    </style>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        doom: {
+                            light: '#f2f7f7', // Very light teal tint
+                            accent: '#115e59', // Dark teal (Tailwind teal-800)
+                            accentHover: '#134e4a', // Darker teal (Tailwind teal-900)
+                            card: '#ffffff',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- ApexCharts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+</head>
+<body class="bg-doom-light text-zinc-900 antialiased selection:bg-doom-accent selection:text-white relative">
+
+    <!-- 12-SECOND NEWSLETTER POPUP -->
+    <div id="newsletter-modal" class="fixed inset-0 z-[110] flex items-center justify-center hidden opacity-0 transition-opacity duration-500">
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-zinc-900/60 backdrop-blur-sm" onclick="closeNewsletterModal()"></div>
+        
+        <!-- Modal Content -->
+        <div id="newsletter-card" class="relative z-10 w-full max-w-[400px] mx-4 bg-white rounded-2xl shadow-2xl p-8 text-center scale-95 translate-y-4 transition-all duration-500 border border-teal-100">
+            <!-- Close Button -->
+            <button type="button" onclick="closeNewsletterModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-700 transition">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+
+            <!-- Logo -->
+            <div class="flex justify-center mb-6">
+                <img src="assets/static/logo-horizontal.png" alt="Vertex" class="h-4 w-auto" />
+            </div>
+
+            <h2 class="text-2xl font-bold text-zinc-900 mb-2">Stay Ahead of the Curve</h2>
+            <p class="text-sm text-zinc-500 mb-8">Get notified when new algorithms drop, plus receive exclusive optimization tips directly in your inbox.</p>
+            
+            <form onsubmit="handlePopupNewsletterSubmit(event)" class="flex flex-col gap-3">
+                <div class="relative flex items-center border bg-teal-50 border-teal-100 rounded-lg pl-3 focus-within:border-doom-accent focus-within:ring-1 focus-within:ring-doom-accent transition-all">
+                    <svg width="18" height="18" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="m2.5 4.375 3.875 2.906c.667.5 1.583.5 2.25 0L12.5 4.375" stroke="#115e59" stroke-opacity=".6" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M11.875 3.125h-8.75c-.69 0-1.25.56-1.25 1.25v6.25c0 .69.56 1.25 1.25 1.25h8.75c.69 0 1.25-.56 1.25-1.25v-6.25c0-.69-.56-1.25-1.25-1.25Z" stroke="#115e59" stroke-opacity=".6" stroke-width="1.3" stroke-linecap="round"/>
+                    </svg>
+                    <input id="popup-newsletter-email" class="w-full bg-transparent text-zinc-900 text-sm focus:outline-none block p-3 transition" type="email" placeholder="Enter your email" required>
+                </div>
+                <button type="submit" class="w-full bg-doom-accent hover:bg-doom-accentHover text-white font-semibold rounded-lg text-sm px-5 py-3 text-center transition-all shadow-md shadow-teal-900/20 active:scale-95 mt-2">Subscribe for Updates</button>
+                <p class="text-xs text-zinc-400 mt-1">Unsubscribe anytime.</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- THANK YOU TOAST -->
+    <div id="thankyou-toast" class="fixed inset-0 z-[120] flex items-center justify-center hidden pointer-events-none">
+        <div class="bg-white border border-teal-100 rounded-2xl shadow-2xl px-8 py-6 text-center pointer-events-auto scale-90 opacity-0 transition-all duration-300">
+            <div class="size-10 bg-doom-accent rounded-full flex items-center justify-center mx-auto mb-3 shadow-md shadow-teal-900/20">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <p class="text-lg font-semibold text-zinc-900">Thanks for signing up!</p>
+            <p class="text-sm text-zinc-500 mt-1">You're on the list.</p>
+        </div>
+    </div>
+
+    <!-- SIGN UP / LOG IN MODAL -->
+    <div id="signup-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden opacity-0 transition-opacity duration-300 overflow-y-auto pt-10 pb-10">
+        <div class="fixed inset-0 bg-zinc-900/60 backdrop-blur-sm" onclick="closeSignupModal()"></div>
+        
+        <div id="signup-card" class="relative z-10 w-full max-w-[800px] mx-4 scale-95 transition-transform duration-300">
+            <div class="flex flex-col md:flex-row bg-white rounded-2xl shadow-2xl overflow-hidden relative">
+                
+                <button type="button" onclick="closeSignupModal()" class="absolute top-4 right-4 z-20 text-zinc-400 hover:text-zinc-700 transition bg-white/50 backdrop-blur rounded-full p-1">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+
+                <!-- Left Column -->
+                <div class="md:w-1/2 bg-doom-light/60 p-8 md:p-10 flex flex-col justify-center border-b md:border-b-0 md:border-r border-teal-100">
+                    <h2 class="text-3xl font-bold text-zinc-900 mb-4 leading-tight">Get Premium Access</h2>
+                    <p class="text-zinc-600 mb-8 text-sm leading-relaxed">Sign up and subscribe to get unrestricted access to every institutional-grade strategy in the Vertex network.</p>
+                    
+                    <ul class="space-y-4 text-sm text-zinc-700 font-medium mb-10">
+                        <li class="flex items-center gap-3">
+                            <div class="size-6 rounded-full bg-teal-100 flex items-center justify-center text-doom-accent"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                            Instant NT8 assembly downloads
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <div class="size-6 rounded-full bg-teal-100 flex items-center justify-center text-doom-accent"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                            Lifetime algorithm updates
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <div class="size-6 rounded-full bg-teal-100 flex items-center justify-center text-doom-accent"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                            Fully adjustable parameters
+                        </li>
+                    </ul>
+
+                    <div class="mt-auto pt-6 border-t border-teal-200/50">
+                        <p class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Membership — Strategies Only</p>
+                        <p class="text-4xl font-bold text-zinc-900">$349<span class="text-base text-zinc-500 font-medium"> one-time fee</span></p>
+                        <p class="text-xs text-zinc-400 mt-2">Access all strategies. Addons sold individually.</p>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="md:w-1/2 p-8 md:p-10 flex flex-col justify-center">
+                    <!-- SIGN UP FORM -->
+                    <form id="signup-form" class="block w-full text-zinc-500 text-sm" onsubmit="event.preventDefault();">
+                        <h2 class="text-2xl font-bold mb-8 text-center text-zinc-800">Create Account</h2>
+                        
+                        <div class="flex items-center my-3 border bg-teal-50 border-teal-100 rounded-lg gap-2 pl-3 focus-within:border-doom-accent focus-within:ring-1 focus-within:ring-doom-accent transition-all">
+                            <svg width="18" height="18" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3.125 13.125a4.375 4.375 0 0 1 8.75 0M10 4.375a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0" stroke="#115e59" stroke-opacity=".6" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <input class="w-full outline-none bg-transparent py-3 text-zinc-800 placeholder:text-zinc-400" type="text" placeholder="Username" required>
+                        </div>
+                        
+                        <div class="flex items-center my-3 border bg-teal-50 border-teal-100 rounded-lg gap-2 pl-3 focus-within:border-doom-accent focus-within:ring-1 focus-within:ring-doom-accent transition-all">
+                            <svg width="18" height="18" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="m2.5 4.375 3.875 2.906c.667.5 1.583.5 2.25 0L12.5 4.375" stroke="#115e59" stroke-opacity=".6" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M11.875 3.125h-8.75c-.69 0-1.25.56-1.25 1.25v6.25c0 .69.56 1.25 1.25 1.25h8.75c.69 0 1.25-.56 1.25-1.25v-6.25c0-.69-.56-1.25-1.25-1.25Z" stroke="#115e59" stroke-opacity=".6" stroke-width="1.3" stroke-linecap="round"/>
+                            </svg>
+                            <input class="w-full outline-none bg-transparent py-3 text-zinc-800 placeholder:text-zinc-400" type="email" placeholder="Email" required>
+                        </div>
+                        
+                        <div class="flex items-center mt-3 mb-8 border bg-teal-50 border-teal-100 rounded-lg gap-2 pl-3 focus-within:border-doom-accent focus-within:ring-1 focus-within:ring-doom-accent transition-all">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="#115e59" stroke-opacity=".6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#115e59" stroke-opacity=".6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                            <input class="w-full outline-none bg-transparent py-3 text-zinc-800 placeholder:text-zinc-400" type="password" placeholder="Password" required>
+                        </div>
+                        
+                        <button class="w-full mb-4 bg-doom-accent hover:bg-doom-accentHover transition-all active:scale-95 py-3 rounded-lg text-white font-semibold shadow-md shadow-teal-900/20">Sign Up & Subscribe</button>
+                        <p class="text-center mt-4 text-zinc-500">Already have an account? <a href="#" onclick="toggleAuth('login')" class="text-doom-accent font-medium hover:underline">Log In</a></p>
+                    </form>
+
+                    <!-- LOG IN FORM (Hidden by default) -->
+                    <form id="login-form" class="hidden w-full text-zinc-500 text-sm" onsubmit="event.preventDefault();">
+                        <h2 class="text-2xl font-bold mb-8 text-center text-zinc-800">Welcome Back</h2>
+                        
+                        <div class="flex items-center my-3 border bg-teal-50 border-teal-100 rounded-lg gap-2 pl-3 focus-within:border-doom-accent focus-within:ring-1 focus-within:ring-doom-accent transition-all">
+                            <svg width="18" height="18" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="m2.5 4.375 3.875 2.906c.667.5 1.583.5 2.25 0L12.5 4.375" stroke="#115e59" stroke-opacity=".6" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M11.875 3.125h-8.75c-.69 0-1.25.56-1.25 1.25v6.25c0 .69.56 1.25 1.25 1.25h8.75c.69 0 1.25-.56 1.25-1.25v-6.25c0-.69-.56-1.25-1.25-1.25Z" stroke="#115e59" stroke-opacity=".6" stroke-width="1.3" stroke-linecap="round"/>
+                            </svg>
+                            <input class="w-full outline-none bg-transparent py-3 text-zinc-800 placeholder:text-zinc-400" type="email" placeholder="Email" required>
+                        </div>
+                        
+                        <div class="flex items-center mt-3 mb-2 border bg-teal-50 border-teal-100 rounded-lg gap-2 pl-3 focus-within:border-doom-accent focus-within:ring-1 focus-within:ring-doom-accent transition-all">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="#115e59" stroke-opacity=".6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#115e59" stroke-opacity=".6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                            <input class="w-full outline-none bg-transparent py-3 text-zinc-800 placeholder:text-zinc-400" type="password" placeholder="Password" required>
+                        </div>
+
+                        <div class="flex justify-end mb-8">
+                            <a href="#" class="text-xs text-doom-accent hover:underline">Forgot password?</a>
+                        </div>
+                        
+                        <button class="w-full mb-4 bg-doom-accent hover:bg-doom-accentHover transition-all active:scale-95 py-3 rounded-lg text-white font-semibold shadow-md shadow-teal-900/20">Log In to Dashboard</button>
+                        <p class="text-center mt-4 text-zinc-500">Don't have an account? <a href="#" onclick="toggleAuth('signup')" class="text-doom-accent font-medium hover:underline">Sign Up</a></p>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GLOBAL NAVBAR -->
+    <header class='flex flex-col items-center justify-center relative pt-4'>
+        <nav class="flex flex-col items-center w-full relative z-50">
+            <div class="flex items-center justify-between p-4 md:px-12 lg:px-24 w-full relative">
+                <!-- Logo -->
+                <a href="#" onclick="showView('home-view')" class="flex items-center cursor-pointer shrink-0">
+                    <img src="assets/static/logo-horizontal.png" alt="Vertex" class="h-8 w-auto" />
+                </a>
+
+                <!-- Desktop Menu - absolutely centered -->
+                <div id="menu" class="max-md:w-0 max-md:fixed max-md:top-0 max-md:z-50 max-md:left-0 max-md:transition-all max-md:duration-300 max-md:overflow-hidden max-md:h-screen max-md:bg-doom-light/90 max-md:backdrop-blur max-md:flex-col max-md:justify-center flex items-center gap-8 text-sm font-medium absolute left-1/2 -translate-x-1/2">
+                    <a href="#" onclick="showView('home-view')" class="relative text-zinc-600 hover:text-doom-accent transition py-1 group">
+                        Home
+                        <span class="absolute left-0 bottom-0 w-0 h-0.5 bg-doom-accent transition-all duration-300 group-hover:w-full"></span>
+                    </a>
+                    <a href="#features" onclick="showView('home-view')" class="relative text-zinc-600 hover:text-doom-accent transition py-1 group">
+                        Features
+                        <span class="absolute left-0 bottom-0 w-0 h-0.5 bg-doom-accent transition-all duration-300 group-hover:w-full"></span>
+                    </a>
+                    <a href="#addons" onclick="showView('home-view')" class="relative text-zinc-600 hover:text-doom-accent transition py-1 group">
+                        Addons
+                        <span class="absolute left-0 bottom-0 w-0 h-0.5 bg-doom-accent transition-all duration-300 group-hover:w-full"></span>
+                    </a>
+                    <a href="#strategies" onclick="showView('home-view')" class="relative text-zinc-600 hover:text-doom-accent transition py-1 group">
+                        Strategies
+                        <span class="absolute left-0 bottom-0 w-0 h-0.5 bg-doom-accent transition-all duration-300 group-hover:w-full"></span>
+                    </a>
+                    
+                    <button id="close-menu" class="md:hidden bg-doom-accent hover:bg-doom-accentHover text-white p-2 rounded-md aspect-square transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                    </button>
+                </div>
+
+                <!-- CTA & Mobile Toggle -->
+                <div class="flex items-center gap-3">
+                    <button onclick="openSignupModal()" class="hidden md:flex items-center gap-2 border border-zinc-300 bg-white hover:bg-zinc-50 px-6 py-2.5 rounded-full text-sm font-medium transition shadow-sm">
+                        Get Strategies
+                    </button>
+                    <button id="open-menu" class="md:hidden bg-doom-accent hover:bg-doom-accentHover text-white p-2 rounded-md aspect-square transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16" /><path d="M4 18h16" /><path d="M4 6h16" /></svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- VIEW CONTAINER: HOME -->
+    <div id="home-view" class="block transition-opacity duration-300">
+        <!-- Hero Content -->
+        <div class="flex flex-col items-center mt-20 px-6 z-10 relative">
+            <h1 class="text-5xl sm:text-6xl lg:text-7xl/tight text-center font-bold text-zinc-900 max-w-[800px] mt-6">
+                Automate Your Trading Edge
+            </h1>
+            <p class="text-base text-center font-normal max-w-[600px] mt-5 text-zinc-600">
+                Purchase and run powerful, pre-built NinjaTrader strategies directly on your own charts. Institutional-grade analytics, built for retail execution.
+            </p>
+
+            <div class='flex flex-wrap justify-center gap-4 mt-10'>
+                <a href="#strategies" class="bg-doom-accent hover:bg-doom-accentHover text-white px-8 py-3 rounded-full text-sm font-medium transition shadow-lg shadow-teal-900/20 group flex items-center gap-2">
+                    Browse Strategies
+                    <svg class="group-hover:translate-x-1 transition-transform" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+                </a>
+                <button onclick="showView('docs-view')" class="bg-white border border-zinc-200 text-zinc-800 px-8 py-3 rounded-full text-sm font-medium hover:bg-zinc-50 transition shadow-sm relative group overflow-hidden">
+                    Read the Docs
+                    <span class="absolute left-0 bottom-0 w-0 h-0.5 bg-zinc-400 transition-all duration-300 group-hover:w-full"></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Decorative Background Elements -->
+        <div class="absolute top-0 inset-x-0 h-[600px] pointer-events-none overflow-hidden z-0 flex justify-center -z-10">
+            <div class="w-[800px] h-[400px] bg-teal-400/10 blur-[100px] rounded-full absolute -top-40"></div>
+            <div class="w-full h-full bg-[repeating-linear-gradient(to_bottom,#e4e4e7_0,#e4e4e7_1px,transparent_1px,transparent_40px),repeating-linear-gradient(to_right,#e4e4e7_0,#e4e4e7_1px,transparent_1px,transparent_40px)] opacity-30 absolute top-0"></div>
+            <div class="absolute bottom-0 left-0 w-full h-40 bg-gradient-to-t from-doom-light to-transparent"></div>
+        </div>
+
+        <!-- FEATURES SECTION -->
+        <section id="features" class="py-24 px-4 relative z-10">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold text-zinc-900 mt-4">Built for <span id="rotating-trait" class="text-doom-accent transition-opacity duration-500">Systematic</span> Traders</h2>
+                    <p class="text-base text-zinc-600 max-w-lg mx-auto mt-4">Everything you need to evaluate algorithmic performance without the noise. Clean data, clear insights.</p>
+                </div>
+
+                <div class="flex flex-col gap-6">
+                    <!-- Row 1 -->
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <div class="md:w-[60%] bg-white border border-teal-100 shadow-sm rounded-2xl hover:shadow-md transition-all duration-300 p-8 flex flex-col justify-center">
+                            <div class="size-12 bg-doom-accent rounded-xl flex items-center justify-center mb-6 shadow-md shadow-teal-900/20">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3v18h18" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="m19 9-5 5-4-4-3 3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-zinc-900">Real-Time Equity Curves</h3>
+                            <p class="text-base text-zinc-600 mt-3 max-w-md">Visualize cumulative profit and drawdown instantly. Our charts map out your backtested and forward-tested performance tick-by-tick.</p>
+                        </div>
+
+                        <div class="md:w-[40%] bg-white border border-teal-100 shadow-sm rounded-2xl hover:shadow-md transition-all duration-300 p-8">
+                            <div class="size-12 bg-doom-accent rounded-xl flex items-center justify-center mb-6 shadow-md shadow-teal-900/20">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-zinc-900">Deep Metrics</h3>
+                            <p class="text-base text-zinc-600 mt-3">Track Profit Factor, Max Drawdown, Total Trades, and Contract sizing at a glance to ensure robust risk management.</p>
+                        </div>
+                    </div>
+
+                    <!-- Row 2 -->
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <div class="md:w-[40%] bg-white border border-teal-100 shadow-sm rounded-2xl hover:shadow-md transition-all duration-300 p-8">
+                            <div class="size-12 bg-doom-accent rounded-xl flex items-center justify-center mb-6 shadow-md shadow-teal-900/20">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 7h-9M14 17H5M20 17h-2M9 7H5" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="11" cy="17" r="2" stroke="#fff" stroke-width="2"/><circle cx="13" cy="7" r="2" stroke="#fff" stroke-width="2"/></svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-zinc-900">Advanced Filtering</h3>
+                            <p class="text-base text-zinc-600 mt-3">Isolate top-performing algorithms across specific timeframes, symbols, or custom risk-adjusted return metrics.</p>
+                        </div>
+
+                        <div class="md:w-[60%] bg-white border border-teal-100 shadow-sm rounded-2xl hover:shadow-md transition-all duration-300 p-8 flex flex-col justify-center">
+                            <div class="size-12 bg-doom-accent rounded-xl flex items-center justify-center mb-6 shadow-md shadow-teal-900/20">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-zinc-900">Built for NinjaTrader</h3>
+                            <p class="text-base text-zinc-600 mt-3 max-w-md">Our algorithms are natively written and compiled for NinjaTrader 8. Simply download the provided assembly, import it to your platform, assign it to a chart, and activate.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STRATEGIES DASHBOARD SECTION -->
+        <section id="strategies" class="py-20 px-4 max-w-7xl mx-auto">
+            
+            <!-- Dashboard Header & Controls -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-zinc-900">Live Strategies</h2>
+                    <p class="text-sm text-zinc-500 mt-1">Showing top performing algorithms based on Profit Factor.</p>
+                </div>
+                
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <!-- Dropdown: Filter Timeframe -->
+                    <div class="relative inline-flex custom-dropdown">
+                        <button type="button" id="current-tf-label" class="dropdown-toggle py-2.5 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg bg-white border border-teal-100 text-zinc-700 shadow-sm hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-doom-accent/20 transition" aria-haspopup="menu" aria-expanded="false">
+                            Lookback: All
+                            <svg class="size-4 text-zinc-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                        <div class="dropdown-menu absolute right-0 top-full mt-2 transition-all duration-200 opacity-0 hidden min-w-48 bg-white border border-teal-100 rounded-lg shadow-lg z-50">
+                            <div class="p-1 space-y-0.5">
+                                <a class="timeframe-opt flex items-center py-2 px-3 rounded-md text-sm text-zinc-700 hover:bg-teal-50 hover:text-doom-accent transition" href="#" data-label="1 Day">1 Day</a>
+                                <a class="timeframe-opt flex items-center py-2 px-3 rounded-md text-sm text-zinc-700 hover:bg-teal-50 hover:text-doom-accent transition" href="#" data-label="1 Week">1 Week</a>
+                                <a class="timeframe-opt flex items-center py-2 px-3 rounded-md text-sm text-zinc-700 hover:bg-teal-50 hover:text-doom-accent transition" href="#" data-label="1 Month">1 Month</a>
+                                <a class="timeframe-opt flex items-center py-2 px-3 rounded-md text-sm bg-teal-50 text-doom-accent font-medium transition" href="#" data-label="All">All Time</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown: Sort By -->
+                    <div class="relative inline-flex custom-dropdown">
+                        <button type="button" id="current-sort-label" class="dropdown-toggle py-2.5 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg bg-white border border-teal-100 text-zinc-700 shadow-sm hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-doom-accent/20 transition" aria-haspopup="menu" aria-expanded="false">
+                            Sort by: Profit Factor
+                            <svg class="size-4 text-zinc-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                        <div class="dropdown-menu absolute right-0 top-full mt-2 transition-all duration-200 opacity-0 hidden min-w-56 bg-white border border-teal-100 rounded-lg shadow-lg z-50">
+                            <div class="p-1 space-y-0.5">
+                                <a class="sort-opt flex items-center justify-between py-2 px-3 rounded-md text-sm bg-teal-50 text-doom-accent font-medium transition" href="#" data-sort="pf" data-label="Profit Factor">
+                                    Profit Factor 
+                                    <svg class="size-4 sort-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                </a>
+                                <a class="sort-opt flex items-center justify-between py-2 px-3 rounded-md text-sm text-zinc-700 hover:bg-teal-50 hover:text-doom-accent transition" href="#" data-sort="profit" data-label="Cumulative Profit">Cumulative Profit<svg class="size-4 sort-icon hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></a>
+                                <a class="sort-opt flex items-center justify-between py-2 px-3 rounded-md text-sm text-zinc-700 hover:bg-teal-50 hover:text-doom-accent transition" href="#" data-sort="trades" data-label="Total Trades">Total Trades<svg class="size-4 sort-icon hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></a>
+                                <a class="sort-opt flex items-center justify-between py-2 px-3 rounded-md text-sm text-zinc-700 hover:bg-teal-50 hover:text-doom-accent transition" href="#" data-sort="dd" data-label="Least Drawdown">Least Drawdown<svg class="size-4 sort-icon hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strategy Grid Container -->
+            <div id="strategy-grid" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                <!-- Cards will be injected here by JavaScript -->
+            </div>
+
+        </section>
+
+        <!-- ADDONS SECTION -->
+        <section id="addons" class="py-16 px-4 max-w-7xl mx-auto">
+            <div class="mb-10">
+                <h2 class="text-2xl font-bold text-zinc-900">Addons</h2>
+                <p class="text-sm text-zinc-500 mt-1">Powerful tools to extend your trading workflow.</p>
+            </div>
+
+            <div class="flex flex-col gap-5" id="addons-list">
+                <!-- Addon cards injected by JS -->
+            </div>
+        </section>
+
+        <!-- FAQ SECTION -->
+        <section class="flex flex-col items-center text-center px-4 py-16 mt-10 max-w-7xl mx-auto">
+            <p class="text-sm font-semibold text-doom-accent uppercase tracking-wider">FAQ</p>
+            <h2 class="text-3xl md:text-4xl font-bold mt-2 text-zinc-900">Frequently Asked Questions</h2>
+            <p class="text-base text-zinc-500 mt-4 max-w-lg">
+                Everything you need to know about purchasing and running Vertex algorithms.
+            </p>
+
+            <div id="faqContainer" class="max-w-6xl w-full mt-10 flex flex-col gap-4 items-start text-left"></div>
+        </section>
+
+        <!-- NEWSLETTER SECTION -->
+        <section class="py-20 px-4 relative z-10 bg-gradient-to-b from-doom-light via-white to-doom-light border-t border-teal-100">
+            <div class="max-w-5xl mx-auto">
+                <div class="bg-white border border-teal-100 rounded-2xl shadow-sm p-8 md:p-12 flex flex-col md:flex-row items-center gap-8 md:gap-16">
+                    <!-- Left: Text -->
+                    <div class="md:w-1/2 text-center md:text-left">
+                        <h2 class="text-3xl md:text-4xl font-bold text-zinc-900 leading-tight">Stay in the Loop</h2>
+                        <p class="text-base text-zinc-500 mt-4 max-w-md">
+                            Get notified when new algorithms drop, plus receive exclusive optimization tips directly in your inbox. No spam, unsubscribe anytime.
+                        </p>
+                    </div>
+                    <!-- Right: Form -->
+                    <div class="md:w-1/2 w-full max-w-md">
+                        <form id="mailing-list-form" onsubmit="handleMailingListSubmit(event)" class="flex flex-col sm:flex-row gap-3">
+                            <div class="relative flex-1 flex items-center border bg-teal-50 border-teal-100 rounded-xl pl-3 focus-within:border-doom-accent focus-within:ring-1 focus-within:ring-doom-accent transition-all">
+                                <svg width="18" height="18" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="m2.5 4.375 3.875 2.906c.667.5 1.583.5 2.25 0L12.5 4.375" stroke="#115e59" stroke-opacity=".6" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M11.875 3.125h-8.75c-.69 0-1.25.56-1.25 1.25v6.25c0 .69.56 1.25 1.25 1.25h8.75c.69 0 1.25-.56 1.25-1.25v-6.25c0-.69-.56-1.25-1.25-1.25Z" stroke="#115e59" stroke-opacity=".6" stroke-width="1.3" stroke-linecap="round"/>
+                                </svg>
+                                <input id="mailing-list-email" class="w-full bg-transparent text-zinc-900 text-sm focus:outline-none block p-3 transition" type="email" placeholder="Enter your email" required>
+                            </div>
+                            <button type="submit" class="bg-doom-accent hover:bg-doom-accentHover text-white font-semibold rounded-xl text-sm px-6 py-3 text-center transition-all shadow-md shadow-teal-900/20 active:scale-95 whitespace-nowrap">
+                                Subscribe
+                            </button>
+                        </form>
+                        <p class="text-xs text-zinc-400 mt-3 text-center md:text-left">No spam. Unsubscribe anytime.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- VIEW CONTAINER: STRATEGY DETAIL -->
+    <div id="strategy-detail-view" class="hidden min-h-[70vh] py-16 px-4 max-w-7xl mx-auto transition-opacity duration-300">
+        <!-- Back Button -->
+        <button onclick="showView('home-view', 'strategies')" class="flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-doom-accent transition mb-8 group relative w-fit">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            Back to Home
+            <span class="absolute left-6 bottom-0 w-0 h-px bg-doom-accent transition-all duration-300 group-hover:w-full"></span>
+        </button>
+
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 id="detail-title" class="text-3xl md:text-4xl font-bold text-zinc-900">Strategy Detail</h1>
+            <p id="detail-subtitle" class="text-sm text-zinc-500 mt-2">Loading...</p>
+        </div>
+
+        <!-- Top Row: Graph and Stats -->
+        <div class="flex flex-col lg:flex-row gap-6 mb-8">
+            <!-- Chart Card -->
+            <div class="lg:w-3/4 bg-white border border-teal-100 rounded-2xl p-6 shadow-sm flex flex-col relative z-10">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-bold text-zinc-900">Performance Timeline</h2>
+                    
+                    <!-- Drawdown Toggle -->
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggle-drawdown" class="sr-only peer" onchange="toggleDrawdown(this)">
+                        <div class="w-11 h-6 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-doom-accent"></div>
+                        <span class="ml-3 text-sm font-medium text-zinc-600">Overlay Max Drawdown</span>
+                    </label>
+                </div>
+                <div id="detail-chart" class="w-full flex-1 min-h-[300px]"></div>
+            </div>
+
+            <!-- Stats Card -->
+            <div class="lg:w-1/4 bg-white border border-teal-100 rounded-2xl p-6 shadow-sm flex flex-col">
+                <h2 class="text-lg font-bold text-zinc-900 mb-6">Overview</h2>
+                <div class="space-y-4 flex-1" id="detail-stats">
+                    <!-- Stats injected via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Row: Table -->
+        <div class="bg-white border border-teal-100 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+            <div class="p-6 border-b border-teal-50 shrink-0">
+                <h2 class="text-lg font-bold text-zinc-900">Trade History</h2>
+            </div>
+            <div class="overflow-x-auto overflow-y-auto max-h-[640px]">
+                <table class="w-full text-left text-sm text-zinc-600 whitespace-nowrap">
+                    <thead class="bg-teal-50/95 backdrop-blur-sm text-xs uppercase text-zinc-500 font-semibold sticky top-0 z-10 shadow-sm select-none">
+                        <tr>
+                            <th class="px-3 py-4 border-b border-teal-100 cursor-pointer hover:bg-teal-100/50 transition-colors" onclick="sortTradeHistory('id')">
+                                <div class="flex items-center gap-1">Trade ID <svg id="sort-icon-id" class="size-3 opacity-0 transition-transform th-sort-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+                            </th>
+                            <th class="px-3 py-4 border-b border-teal-100 cursor-pointer hover:bg-teal-100/50 transition-colors" onclick="sortTradeHistory('date')">
+                                <div class="flex items-center gap-1">Date <svg id="sort-icon-date" class="size-3 opacity-0 transition-transform th-sort-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+                            </th>
+                            <th class="px-3 py-4 border-b border-teal-100 cursor-pointer hover:bg-teal-100/50 transition-colors" onclick="sortTradeHistory('isWin')">
+                                <div class="flex items-center gap-1">Outcome <svg id="sort-icon-isWin" class="size-3 opacity-0 transition-transform th-sort-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+                            </th>
+                            <th class="px-3 py-4 border-b border-teal-100 cursor-pointer hover:bg-teal-100/50 transition-colors" onclick="sortTradeHistory('asset')">
+                                <div class="flex items-center gap-1">Asset <svg id="sort-icon-asset" class="size-3 opacity-0 transition-transform th-sort-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+                            </th>
+                            <th class="px-3 py-4 border-b border-teal-100 cursor-pointer hover:bg-teal-100/50 transition-colors" onclick="sortTradeHistory('entryPrice')">
+                                <div class="flex items-center gap-1">Entry Price <svg id="sort-icon-entryPrice" class="size-3 opacity-0 transition-transform th-sort-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+                            </th>
+                            <th class="px-3 py-4 border-b border-teal-100 cursor-pointer hover:bg-teal-100/50 transition-colors" onclick="sortTradeHistory('exitPrice')">
+                                <div class="flex items-center gap-1">Exit Price <svg id="sort-icon-exitPrice" class="size-3 opacity-0 transition-transform th-sort-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+                            </th>
+                            <th class="px-3 py-4 border-b border-teal-100 cursor-pointer hover:bg-teal-100/50 transition-colors" onclick="sortTradeHistory('drawdown')">
+                                <div class="flex items-center gap-1">Drawdown <svg id="sort-icon-drawdown" class="size-3 opacity-0 transition-transform th-sort-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+                            </th>
+                            <th class="px-3 py-4 border-b border-teal-100 text-right cursor-pointer hover:bg-teal-100/50 transition-colors" onclick="sortTradeHistory('indPnl')">
+                                <div class="flex items-center justify-end gap-1">PNL <svg id="sort-icon-indPnl" class="size-3 opacity-0 transition-transform th-sort-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+                            </th>
+                            <th class="px-3 py-4 border-b border-teal-100 text-right cursor-pointer hover:bg-teal-100/50 transition-colors" onclick="sortTradeHistory('cumPnl')">
+                                <div class="flex items-center justify-end gap-1">Cumulative PNL <svg id="sort-icon-cumPnl" class="size-3 opacity-0 transition-transform th-sort-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="trade-history-body" class="divide-y divide-teal-50">
+                        <!-- Rows injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW CONTAINER: DOCUMENTATION -->
+    <div id="docs-view" class="hidden min-h-[70vh] py-16 px-4 max-w-6xl mx-auto transition-opacity duration-300">
+        <button onclick="showView('home-view')" class="flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-doom-accent transition mb-8 group relative w-fit">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            Back to Home
+            <span class="absolute left-6 bottom-0 w-0 h-px bg-doom-accent transition-all duration-300 group-hover:w-full"></span>
+        </button>
+
+        <div class="flex flex-col lg:flex-row gap-12 lg:gap-20 relative">
+            
+            <!-- Left Sidebar: Table of Contents / Timeline -->
+            <div class="lg:w-1/3 shrink-0 hidden lg:block">
+                <div class="sticky top-12 bg-doom-light/80 backdrop-blur-sm z-20 py-4 lg:-my-4">
+                    <h2 class="text-3xl font-bold text-zinc-900 mb-8">Documentation</h2>
+                    
+                    <!-- Timeline Structure -->
+                    <div class="flex flex-col w-full relative pl-2">
+                        <!-- Vertical line connecting nodes -->
+                        <div class="absolute left-[23px] top-4 bottom-8 w-0.5 bg-teal-100"></div>
+
+                        <!-- Step 1 -->
+                        <a href="#doc-step-1" onclick="if(window.innerWidth >= 1024) { switchDoc('doc-step-1'); event.preventDefault(); }" class="toc-link group flex gap-5 relative mb-10" data-target="doc-step-1">
+                            <div class="toc-node relative z-10 flex-shrink-0 size-8 rounded-full bg-white border-2 border-doom-accent flex items-center justify-center transition-all shadow-sm">
+                                <span class="toc-dot size-2.5 rounded-full bg-doom-accent transition-all"></span>
+                            </div>
+                            <div class="pt-1 flex-1">
+                                <h4 class="toc-text text-base font-bold text-zinc-900 transition-colors">1. Installation</h4>
+                                <p class="text-sm text-zinc-400 mt-1">Downloading & importing assembly</p>
+                            </div>
+                        </a>
+
+                        <!-- Step 2 -->
+                        <a href="#doc-step-2" onclick="if(window.innerWidth >= 1024) { switchDoc('doc-step-2'); event.preventDefault(); }" class="toc-link group flex gap-5 relative mb-10" data-target="doc-step-2">
+                            <div class="toc-node relative z-10 flex-shrink-0 size-8 rounded-full bg-white border-2 border-teal-200 flex items-center justify-center transition-all shadow-sm">
+                                <span class="toc-dot size-2.5 rounded-full bg-transparent transition-all"></span>
+                            </div>
+                            <div class="pt-1 flex-1">
+                                <h4 class="toc-text text-base font-medium text-zinc-500 transition-colors">2. Configuration</h4>
+                                <p class="text-sm text-zinc-400 mt-1">Setting up symbols & timeframe</p>
+                            </div>
+                        </a>
+
+                        <!-- Step 3 -->
+                        <a href="#doc-step-3" onclick="if(window.innerWidth >= 1024) { switchDoc('doc-step-3'); event.preventDefault(); }" class="toc-link group flex gap-5 relative mb-10" data-target="doc-step-3">
+                            <div class="toc-node relative z-10 flex-shrink-0 size-8 rounded-full bg-white border-2 border-teal-200 flex items-center justify-center transition-all shadow-sm">
+                                <span class="toc-dot size-2.5 rounded-full bg-transparent transition-all"></span>
+                            </div>
+                            <div class="pt-1 flex-1">
+                                <h4 class="toc-text text-base font-medium text-zinc-500 transition-colors">3. Parameters</h4>
+                                <p class="text-sm text-zinc-400 mt-1">Adjusting sizing & risk controls</p>
+                            </div>
+                        </a>
+
+                        <!-- Step 4 -->
+                        <a href="#doc-step-4" onclick="if(window.innerWidth >= 1024) { switchDoc('doc-step-4'); event.preventDefault(); }" class="toc-link group flex gap-5 relative" data-target="doc-step-4">
+                            <div class="toc-node relative z-10 flex-shrink-0 size-8 rounded-full bg-white border-2 border-teal-200 flex items-center justify-center transition-all shadow-sm">
+                                <span class="toc-dot size-2.5 rounded-full bg-transparent transition-all"></span>
+                            </div>
+                            <div class="pt-1 flex-1">
+                                <h4 class="toc-text text-base font-medium text-zinc-500 transition-colors">4. Execution</h4>
+                                <p class="text-sm text-zinc-400 mt-1">Enabling live automated trading</p>
+                            </div>
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Content Area -->
+            <!-- On Mobile: Uses native vertical scroll with gap spacing -->
+            <!-- On Desktop (lg): Uses absolute positioning & opacity swapping for scrolljacking -->
+            <div id="docs-right-area" class="flex-1 w-full mt-8 lg:mt-0 relative lg:min-h-[500px] flex flex-col gap-12 lg:gap-0 lg:block">
+                
+                <section id="doc-step-1" class="doc-section scroll-mt-32 w-full transition-all duration-500 lg:absolute lg:top-4 lg:left-0 lg:opacity-100 lg:translate-y-0 lg:pointer-events-auto lg:z-10">
+                    <h3 class="text-2xl font-bold text-zinc-900 mb-4">1. Installation</h3>
+                    <p class="text-zinc-600 leading-relaxed mb-6">
+                        Before running any Vertex strategy, you must download the compressed NinjaTrader 8 assembly file and import it directly into your platform. Do not extract the `.zip` file manually.
+                    </p>
+                    <div class="bg-white border border-teal-100 rounded-xl p-6 shadow-sm mb-6">
+                        <ol class="list-decimal list-inside space-y-4 text-zinc-700 text-sm">
+                            <li>Log in to your Vertex dashboard and download the strategy `.zip` file.</li>
+                            <li>Open NinjaTrader 8.</li>
+                            <li>From the Control Center, navigate to <strong>Tools > Import > NinjaScript Add-On...</strong></li>
+                            <li>Select the downloaded `.zip` file from your computer.</li>
+                            <li>Click OK when prompted by the successful import dialog box.</li>
+                        </ol>
+                    </div>
+                    <p class="hidden lg:flex text-xs text-zinc-400 mt-6 items-center gap-2"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg> Scroll down or click timeline to continue.</p>
+                </section>
+
+                <section id="doc-step-2" class="doc-section scroll-mt-32 w-full transition-all duration-500 lg:absolute lg:top-4 lg:left-0 lg:opacity-0 lg:translate-y-8 lg:pointer-events-none lg:z-0">
+                    <h3 class="text-2xl font-bold text-zinc-900 mb-4">2. Configuration</h3>
+                    <p class="text-zinc-600 leading-relaxed mb-6">
+                        Every algorithm is designed to run on a specific instrument and timeframe (e.g., NQ on a 5-Minute chart). Applying it to the wrong parameters will result in suboptimal performance.
+                    </p>
+                    <div class="bg-white border border-teal-100 rounded-xl p-6 shadow-sm mb-6">
+                        <ul class="list-disc list-inside space-y-4 text-zinc-700 text-sm">
+                            <li>Open a new chart via <strong>New > Chart</strong> in the Control Center.</li>
+                            <li>Select the designated instrument (e.g., NQ or ES).</li>
+                            <li>Set the <strong>Data Series</strong> timeframe strictly to the one listed on your Vertex dashboard card.</li>
+                            <li>Ensure you load enough historical data (at least 30-60 days) so the strategy indicators can calculate properly.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section id="doc-step-3" class="doc-section scroll-mt-32 w-full transition-all duration-500 lg:absolute lg:top-4 lg:left-0 lg:opacity-0 lg:translate-y-8 lg:pointer-events-none lg:z-0">
+                    <h3 class="text-2xl font-bold text-zinc-900 mb-4">3. Parameters</h3>
+                    <p class="text-zinc-600 leading-relaxed mb-6">
+                        Once the chart is open, apply the strategy and adjust your risk parameters. While our default parameters are mathematically optimized, you can scale the contract sizing to fit your account size.
+                    </p>
+                    <div class="bg-white border border-teal-100 rounded-xl p-6 shadow-sm mb-6">
+                        <ul class="list-disc list-inside space-y-4 text-zinc-700 text-sm">
+                            <li>Right-click the chart and select <strong>Strategies</strong>.</li>
+                            <li>Find the Vertex strategy in the top-left list and double-click to add it to the bottom-left pane.</li>
+                            <li>On the right side, review the <strong>Properties</strong>.</li>
+                            <li>Adjust `Order quantity` to your desired contract sizing.</li>
+                            <li>Verify that your `Account` is set to the correct simulation or live account.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section id="doc-step-4" class="doc-section scroll-mt-32 w-full transition-all duration-500 lg:absolute lg:top-4 lg:left-0 lg:opacity-0 lg:translate-y-8 lg:pointer-events-none lg:z-0 pb-12 lg:pb-0">
+                    <h3 class="text-2xl font-bold text-zinc-900 mb-4">4. Execution</h3>
+                    <p class="text-zinc-600 leading-relaxed mb-6">
+                        Activating the strategy gives NinjaTrader permission to place orders automatically on your behalf. Always test new strategies in a simulated account (Sim101) before trading live capital.
+                    </p>
+                    <div class="bg-white border border-teal-100 rounded-xl p-6 shadow-sm mb-6">
+                        <ol class="list-decimal list-inside space-y-4 text-zinc-700 text-sm">
+                            <li>In the Strategy Properties window, scroll down to the bottom.</li>
+                            <li>Check the box next to <strong>Enabled</strong>.</li>
+                            <li>Click <strong>Apply</strong> and <strong>OK</strong>.</li>
+                            <li>Look at the top right of your chart. You should see the strategy name followed by a green "True" indicating it is actively running.</li>
+                        </ol>
+                    </div>
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 flex flex-col sm:flex-row gap-4 mt-6 items-start">
+                        <svg class="text-amber-500 shrink-0 mt-0.5" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+                        <p class="text-sm text-amber-800">Warning: Closing NinjaTrader or disconnecting from your data feed will halt strategy execution. Consider running your platform on a dedicated VPS for 24/5 uptime.</p>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW CONTAINER: TERMS OF SERVICE -->
+    <div id="tos-view" class="hidden min-h-[70vh] py-20 px-4 max-w-4xl mx-auto transition-opacity duration-300">
+        <button onclick="showView('home-view')" class="flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-doom-accent transition mb-8 group relative w-fit">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            Back to Home
+            <span class="absolute left-6 bottom-0 w-0 h-px bg-doom-accent transition-all duration-300 group-hover:w-full"></span>
+        </button>
+        <h1 class="text-4xl font-bold text-zinc-900 mb-4">Terms of Service</h1>
+        <p class="text-sm text-zinc-500 mb-10">Last Updated: June 2026</p>
+        
+        <div class="space-y-8 text-zinc-700 leading-relaxed">
+            <section>
+                <h2 class="text-xl font-bold text-zinc-900 mb-3">1. Agreement to Terms</h2>
+                <p>By accessing or using Vertex and our proprietary NinjaTrader algorithms, you agree to be bound by these Terms of Service. If you disagree with any part of the terms, you may not access the service.</p>
+            </section>
+            <section>
+                <h2 class="text-xl font-bold text-zinc-900 mb-3">2. Trading Risks & Disclaimer</h2>
+                <p>Trading futures and options involves substantial risk of loss and is not suitable for all investors. Past performance of any trading system or methodology is not necessarily indicative of future results. The algorithms provided by Vertex are software tools intended to assist in trading; we do not guarantee profits or protect against losses. You are solely responsible for any trades executed using our software.</p>
+            </section>
+            <section>
+                <h2 class="text-xl font-bold text-zinc-900 mb-3">3. Software License</h2>
+                <p>Upon purchase, Vertex grants you a non-exclusive, non-transferable, revocable license to use the downloaded NinjaTrader assembly strictly for your personal trading. You may not decompile, reverse engineer, distribute, or resell any part of the software.</p>
+            </section>
+            <section>
+                <h2 class="text-xl font-bold text-zinc-900 mb-3">4. Refunds and Cancellations</h2>
+                <p>Due to the digital and proprietary nature of our algorithmic software, all sales are final. We do not offer refunds once the software assembly has been downloaded or license keys issued, except as required by applicable law.</p>
+            </section>
+        </div>
+    </div>
+
+    <!-- VIEW CONTAINER: ADDON DETAIL -->
+    <div id="addon-detail-view" class="hidden min-h-[70vh] py-16 px-4 max-w-4xl mx-auto transition-opacity duration-300">
+        <button onclick="showView('home-view')" class="flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-doom-accent transition mb-8 group relative w-fit">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            Back to Home
+            <span class="absolute left-6 bottom-0 w-0 h-px bg-doom-accent transition-all duration-300 group-hover:w-full"></span>
+        </button>
+        <div id="addon-detail-content">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <!-- VIEW CONTAINER: PRIVACY POLICY -->
+    <div id="privacy-view" class="hidden min-h-[70vh] py-20 px-4 max-w-4xl mx-auto transition-opacity duration-300">
+        <button onclick="showView('home-view')" class="flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-doom-accent transition mb-8 group relative w-fit">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            Back to Home
+            <span class="absolute left-6 bottom-0 w-0 h-px bg-doom-accent transition-all duration-300 group-hover:w-full"></span>
+        </button>
+        <h1 class="text-4xl font-bold text-zinc-900 mb-4">Privacy Policy</h1>
+        <p class="text-sm text-zinc-500 mb-10">Last Updated: June 2026</p>
+        
+        <div class="space-y-8 text-zinc-700 leading-relaxed">
+            <section>
+                <h2 class="text-xl font-bold text-zinc-900 mb-3">1. Information We Collect</h2>
+                <p>We collect information that you provide directly to us, including your name, email address, NinjaTrader Machine ID (for software licensing), and payment information when you purchase a strategy or sign up for an account.</p>
+            </section>
+            <section>
+                <h2 class="text-xl font-bold text-zinc-900 mb-3">2. How We Use Your Information</h2>
+                <p>We use the information we collect to provision software licenses, process transactions, send technical notices and updates, and provide customer support. We do not have access to, nor do we collect, your live trading data, broker credentials, or account balances.</p>
+            </section>
+            <section>
+                <h2 class="text-xl font-bold text-zinc-900 mb-3">3. Information Sharing</h2>
+                <p>We do not share your personal information with third parties except as necessary to process payments (e.g., Stripe) or comply with legal obligations. We will never sell your email address or trading data.</p>
+            </section>
+            <section>
+                <h2 class="text-xl font-bold text-zinc-900 mb-3">4. Security</h2>
+                <p>We implement reasonable security measures to protect your personal information. However, no security system is impenetrable, and we cannot guarantee the absolute security of our databases.</p>
+            </section>
+        </div>
+    </div>
+
+    <!-- LIGHT THEME FOOTER -->
+    <footer class="bg-white border-t border-teal-100 py-16 px-4 mt-6 relative z-10">
+        <div class="max-w-6xl mx-auto flex flex-col items-center">
+            
+            <!-- Bottom Links & Logo area -->
+            <div class="w-full flex flex-col md:flex-row items-center justify-between pt-4 gap-6">
+                
+                <a href="#" onclick="showView('home-view')" class="flex items-center cursor-pointer">
+                    <img src="assets/static/logo-horizontal.png" alt="Vertex" class="h-6 w-auto" />
+                </a>
+
+                <div class="flex flex-wrap justify-center gap-x-6 gap-y-2">
+                    <button onclick="showView('docs-view')" class="text-sm font-medium text-zinc-600 hover:text-doom-accent transition cursor-pointer relative group">
+                        Documentation
+                        <span class="absolute left-0 bottom-0 w-0 h-px bg-doom-accent transition-all duration-300 group-hover:w-full"></span>
+                    </button>
+                    <button onclick="showView('tos-view')" class="text-sm font-medium text-zinc-600 hover:text-doom-accent transition cursor-pointer relative group">
+                        Terms of Service
+                        <span class="absolute left-0 bottom-0 w-0 h-px bg-doom-accent transition-all duration-300 group-hover:w-full"></span>
+                    </button>
+                    <button onclick="showView('privacy-view')" class="text-sm font-medium text-zinc-600 hover:text-doom-accent transition cursor-pointer relative group">
+                        Privacy
+                        <span class="absolute left-0 bottom-0 w-0 h-px bg-doom-accent transition-all duration-300 group-hover:w-full"></span>
+                    </button>
+                </div>
+
+                <p class="text-sm text-zinc-400">© 2026 Vertex. MIT License.</p>
+            </div>
+
+            <!-- GitHub Link -->
+            <div class="mt-6 flex items-center gap-2">
+                <a href="https://github.com/shrils" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-800 transition">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+                    View on GitHub
+                </a>
+            </div>
+            
+        </div>
+    </footer>
+
+    <!-- CHAT WIDGET CONTAINER -->
+    <div id="chat-widget" class="fixed bottom-24 right-4 md:right-8 w-[92vw] sm:w-[390px] h-[640px] max-h-[82vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-teal-100 z-50 transform transition-all duration-300 origin-bottom-right scale-0 opacity-0 translate-y-10">
+        
+        <!-- SCREEN 1: MESSAGES CHAT SCREEN (Boris Bot) -->
+        <div id="screen-messages" class="flex-1 flex flex-col h-full bg-zinc-50 overflow-hidden">
+        <!-- White Clean Header -->
+        <div class="bg-white border-b border-teal-50 py-4 px-5 flex items-center justify-between flex-shrink-0 z-20">
+            <div class="flex items-center gap-3">
+            <!-- Concentric Ring / Pulsing Waveform Icon -->
+            <div class="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center border border-teal-100">
+                <svg class="w-6 h-6 text-doom-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="9"></circle>
+                <circle cx="12" cy="12" r="5"></circle>
+                <circle cx="12" cy="12" r="1"></circle>
+                </svg>
+            </div>
+            <div>
+                <div class="flex items-center gap-1.5">
+                <h3 class="font-bold text-zinc-800 text-sm">Boris</h3>
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                </div>
+                <p class="text-xs text-zinc-400 font-medium">Boris • Support Specialist</p>
+            </div>
+            </div>
+            <button onclick="toggleWidget()" class="text-zinc-400 hover:text-zinc-600 p-1.5 hover:bg-zinc-50 rounded-full transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            </button>
+        </div>
+
+        <!-- Scrollable Message Body -->
+        <div id="chat-messages-container" class="flex-1 p-4 overflow-y-auto space-y-4 widget-scrollbar flex flex-col">
+            <!-- Welcoming Bio Block inside thread -->
+            <div class="flex flex-col items-center justify-center text-center py-6 px-4 bg-white rounded-xl border border-teal-50 mb-2">
+            <!-- Main Concentric Icon -->
+            <div class="w-14 h-14 rounded-full bg-teal-50 flex items-center justify-center border border-teal-100 mb-3 animate-pulse">
+                <svg class="w-8 h-8 text-doom-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="9"></circle>
+                <circle cx="12" cy="12" r="5"></circle>
+                <circle cx="12" cy="12" r="1"></circle>
+                </svg>
+            </div>
+            <p class="text-zinc-500 text-xs leading-relaxed max-w-[240px]">
+                Boris, our smart automated helper, is here to handle your algorithmic queries.
+            </p>
+            <span class="mt-4 px-3 py-1 bg-zinc-100 rounded-full text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Today</span>
+            </div>
+
+            <!-- Message List Target -->
+            <div id="message-list" class="space-y-4 flex flex-col justify-end">
+            <!-- Initial Welcome from Boris -->
+            <div class="flex flex-col space-y-1 items-start max-w-[85%] self-start">
+                <span class="text-[10px] text-zinc-400 font-semibold ml-2">Boris</span>
+                <div class="bg-white border border-teal-50 text-zinc-800 text-sm p-3.5 rounded-2xl rounded-tl-none shadow-sm leading-relaxed">
+                Hey! I am Boris. Ready to supercharge your chart setups? Ask me anything about installing strategies, parameter tweaking, or licensing!
+                </div>
+                <span class="text-[10px] text-zinc-400 font-medium ml-2 self-start">12:44 PM</span>
+            </div>
+            </div>
+
+            <!-- Typing Indicator Element -->
+            <div id="typing-indicator" class="flex flex-col space-y-1 items-start max-w-[85%] self-start hidden">
+            <span class="text-[10px] text-zinc-400 font-semibold ml-2">Boris is typing</span>
+            <div class="bg-white border border-teal-50 text-zinc-800 text-sm p-3.5 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-1.5 h-11">
+                <span class="w-2.5 h-2.5 bg-doom-accent rounded-full typing-dot"></span>
+                <span class="w-2.5 h-2.5 bg-doom-accent rounded-full typing-dot"></span>
+                <span class="w-2.5 h-2.5 bg-doom-accent rounded-full typing-dot"></span>
+            </div>
+            </div>
+
+            <!-- Chat Quick Suggestions Box -->
+            <div id="quick-suggestions" class="space-y-2 pt-2 mt-auto">
+            <div class="flex flex-wrap gap-1.5">
+                <button onclick="handleQuickReply('How do I install a strategy?')" class="px-3.5 py-2 bg-teal-50 hover:bg-teal-100 text-doom-accent text-xs font-semibold rounded-full border border-teal-200 transition-all text-left">
+                How do I install NT8 strategies?
+                </button>
+                <button onclick="handleQuickReply('Are default parameters optimized?')" class="px-3.5 py-2 bg-teal-50 hover:bg-teal-100 text-doom-accent text-xs font-semibold rounded-full border border-teal-200 transition-all text-left">
+                Are parameters pre-optimized?
+                </button>
+                <button onclick="handleQuickReply('Do you offer refunds?')" class="px-3.5 py-2 bg-teal-50 hover:bg-teal-100 text-doom-accent text-xs font-semibold rounded-full border border-teal-200 transition-all text-left">
+                What is the refund policy?
+                </button>
+            </div>
+            </div>
+
+        </div>
+
+        <!-- Chat Form Input Area -->
+        <form id="chat-form" onsubmit="handleFormSubmit(event)" class="bg-white border-t border-zinc-100 p-3 flex-shrink-0 relative">
+            <div class="relative flex items-center bg-zinc-50 rounded-xl px-3 border border-zinc-200 focus-within:border-doom-accent focus-within:ring-1 focus-within:ring-doom-accent transition-all">
+            
+            <!-- Main Input text -->
+            <input type="text" id="chat-input" placeholder="Ask Boris..." class="flex-1 py-3 px-2 bg-transparent text-zinc-800 text-sm focus:outline-none placeholder:text-zinc-400">
+
+            <!-- Send action -->
+            <button type="submit" class="w-8 h-8 bg-doom-accent text-white rounded-full flex items-center justify-center hover:bg-doom-accentHover transition-colors shrink-0 shadow-md">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18"></path>
+                </svg>
+            </button>
+            </div>
+        </form>
+        </div>
+
+        <!-- SCREEN 2: HELP CENTER (Basic FAQ accordion for widget) -->
+        <div id="screen-help" class="flex-1 flex flex-col h-full bg-zinc-50 overflow-hidden hidden">
+        <!-- Minimal Header -->
+        <div class="bg-white border-b border-teal-50 p-4 shrink-0 flex items-center justify-between">
+            <h2 class="text-base font-extrabold text-zinc-800">Vertex FAQ</h2>
+            <button onclick="toggleWidget()" class="text-zinc-400 hover:text-zinc-600 p-1 rounded-full">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            </button>
+        </div>
+
+        <!-- FAQ Container inside Widget -->
+        <div class="flex-1 p-4 overflow-y-auto space-y-3 widget-scrollbar" id="widget-faq-accordions">
+            <span class="text-[10px] text-zinc-400 font-bold tracking-widest block uppercase mb-1">Common Questions</span>
+            
+            <!-- Accordion 1 -->
+            <div class="bg-white border border-zinc-200/60 rounded-xl overflow-hidden shadow-sm">
+            <button onclick="toggleWidgetFaq(1)" class="w-full p-4 text-left font-bold text-zinc-800 text-sm flex justify-between items-center hover:bg-zinc-50 transition-colors">
+                <span>What platform do these strategies run on?</span>
+                <span id="widget-faq-arrow-1" class="text-doom-accent transition-transform duration-200">▼</span>
+            </button>
+            <div id="widget-faq-content-1" class="hidden px-4 pb-4 text-zinc-600 text-xs leading-relaxed border-t border-zinc-50 pt-3">
+                All our algorithms are compiled specifically for NinjaTrader 8. You will receive a standard assembly file that imports directly into your NT8 control center.
+            </div>
+            </div>
+
+            <!-- Accordion 2 -->
+            <div class="bg-white border border-zinc-200/60 rounded-xl overflow-hidden shadow-sm">
+            <button onclick="toggleWidgetFaq(2)" class="w-full p-4 text-left font-bold text-zinc-800 text-sm flex justify-between items-center hover:bg-zinc-50 transition-colors">
+                <span>Do I need any programming experience to use these?</span>
+                <span id="widget-faq-arrow-2" class="text-doom-accent transition-transform duration-200">▼</span>
+            </button>
+            <div id="widget-faq-content-2" class="hidden px-4 pb-4 text-zinc-600 text-xs leading-relaxed border-t border-zinc-50 pt-3">
+                Not at all. Once you purchase a strategy, you just import the file and add it to your chart exactly like a standard indicator. All settings are pre-configured.
+            </div>
+            </div>
+
+            <!-- Accordion 3 -->
+            <div class="bg-white border border-zinc-200/60 rounded-xl overflow-hidden shadow-sm">
+            <button onclick="toggleWidgetFaq(3)" class="w-full p-4 text-left font-bold text-zinc-800 text-sm flex justify-between items-center hover:bg-zinc-50 transition-colors">
+                <span>Are the metrics based on backtests or live data?</span>
+                <span id="widget-faq-arrow-3" class="text-doom-accent transition-transform duration-200">▼</span>
+            </button>
+            <div id="widget-faq-content-3" class="hidden px-4 pb-4 text-zinc-600 text-xs leading-relaxed border-t border-zinc-50 pt-3">
+                The cards show forward-tested, out-of-sample data. We use robust historical backtesting for initial development, but the metrics displayed here represent live market execution.
+            </div>
+            </div>
+
+            <!-- Accordion 4 -->
+            <div class="bg-white border border-zinc-200/60 rounded-xl overflow-hidden shadow-sm">
+            <button onclick="toggleWidgetFaq(4)" class="w-full p-4 text-left font-bold text-zinc-800 text-sm flex justify-between items-center hover:bg-zinc-50 transition-colors">
+                <span>Do you provide updates to the algorithms?</span>
+                <span id="widget-faq-arrow-4" class="text-doom-accent transition-transform duration-200">▼</span>
+            </button>
+            <div id="widget-faq-content-4" class="hidden px-4 pb-4 text-zinc-600 text-xs leading-relaxed border-t border-zinc-50 pt-3">
+                Yes. Market regimes change, and we periodically issue optimized updates for our active algorithms to all existing customers.
+            </div>
+            </div>
+
+            <!-- Accordion 5 -->
+            <div class="bg-white border border-zinc-200/60 rounded-xl overflow-hidden shadow-sm">
+            <button onclick="toggleWidgetFaq(5)" class="w-full p-4 text-left font-bold text-zinc-800 text-sm flex justify-between items-center hover:bg-zinc-50 transition-colors">
+                <span>Can I change the contract sizing?</span>
+                <span id="widget-faq-arrow-5" class="text-doom-accent transition-transform duration-200">▼</span>
+            </button>
+            <div id="widget-faq-content-5" class="hidden px-4 pb-4 text-zinc-600 text-xs leading-relaxed border-t border-zinc-50 pt-3">
+                Absolutely. While we provide the default tested contract sizing and stop losses in the UI above, everything is fully adjustable from within the NinjaTrader strategy parameters once loaded.
+            </div>
+            </div>
+
+        </div>
+        </div>
+
+        <!-- PERSISTENT TAB BAR (Only 2 Tabs: Messages & Help) -->
+        <div class="bg-white border-t border-zinc-100 py-2.5 flex justify-around text-xs text-zinc-400 font-semibold flex-shrink-0 z-30">
+        <button onclick="switchTab('messages')" id="tab-messages" class="flex flex-col items-center gap-1 hover:text-zinc-700 transition-colors relative flex-1">
+            <!-- Message bubble Icon -->
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"></path>
+            </svg>
+            <span>Messages</span>
+            <!-- Badge indicator -->
+            <span class="absolute top-0.5 right-12 w-2 h-2 bg-doom-accent rounded-full"></span>
+        </button>
+
+        <button onclick="switchTab('help')" id="tab-help" class="flex flex-col items-center gap-1 text-zinc-400 hover:text-zinc-700 transition-colors flex-1">
+            <!-- Question mark / Help Book Icon -->
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-16.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-16.25v16.25"></path>
+            </svg>
+            <span>Help Desk</span>
+        </button>
+        </div>
+    </div>
+
+    <!-- FLOATING WIDGET LAUNCHER TRIGGER -->
+    <button onclick="toggleWidget()" id="widget-launcher" class="fixed bottom-6 right-6 w-14 h-14 bg-doom-accent hover:bg-doom-accentHover rounded-full flex items-center justify-center shadow-lg hover:shadow-xl text-white transition-all duration-300 z-50 transform hover:scale-105 active:scale-95 cursor-pointer">
+        <!-- Chat Icon (visible when closed) -->
+        <svg id="icon-chat-closed" class="w-6 h-6 transition-transform" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"></path>
+        </svg>
+        <!-- Chevron Down Icon (visible when open) -->
+        <svg id="icon-chat-opened" class="w-6 h-6 hidden transition-transform" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"></path>
+        </svg>
+    </button>
+
+    <!-- INTERACTIVITY & CHART SCRIPTS -->
+    <script>
+        // --- 0. Dynamic View Logic ---
+        function showView(viewId, anchorId = null) {
+            // Hide all views
+            ['home-view', 'docs-view', 'tos-view', 'privacy-view', 'strategy-detail-view', 'addon-detail-view'].forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.add('hidden');
+                el.classList.remove('block');
+            });
+            // Show target view
+            const target = document.getElementById(viewId);
+            target.classList.remove('hidden');
+            target.classList.add('block');
+            
+            // Scroll Logic
+            if (anchorId) {
+                setTimeout(() => {
+                    const el = document.getElementById(anchorId);
+                    if (el) {
+                        const yOffset = -40; 
+                        const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                        window.scrollTo({ top: y, behavior: 'smooth' });
+                    }
+                }, 50);
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        // --- Mailing List Logic ---
+        async function subscribeEmail(email) {
+            const res = await fetch('/api/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+            return res.json();
+        }
+
+        function handleMailingListSubmit(e) {
+            e.preventDefault();
+            const input = document.getElementById('mailing-list-email');
+            const email = input.value.trim();
+            if (!email) return;
+
+            subscribeEmail(email).then(data => {
+                input.value = '';
+                if (data.already) {
+                    input.placeholder = 'You\'re already subscribed!';
+                    setTimeout(() => { input.placeholder = 'Enter your email'; }, 2500);
+                } else {
+                    showThankYouToast();
+                }
+            }).catch(() => {
+                input.placeholder = 'Something went wrong!';
+                setTimeout(() => { input.placeholder = 'Enter your email'; }, 2500);
+            });
+        }
+
+        function showThankYouToast() {
+            const toast = document.getElementById('thankyou-toast');
+            const card = toast.querySelector('div');
+            toast.classList.remove('hidden');
+            void toast.offsetWidth;
+            card.classList.remove('scale-90', 'opacity-0');
+            card.classList.add('scale-100', 'opacity-100');
+
+            setTimeout(() => {
+                card.classList.add('scale-90', 'opacity-0');
+                card.classList.remove('scale-100', 'opacity-100');
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 300);
+            }, 3000);
+        }
+
+        function handlePopupNewsletterSubmit(e) {
+            e.preventDefault();
+            const input = document.getElementById('popup-newsletter-email');
+            const email = input.value.trim();
+            if (!email) return;
+
+            subscribeEmail(email).then(data => {
+                input.value = '';
+                closeNewsletterModal();
+                if (!data.already) {
+                    showThankYouToast();
+                }
+            }).catch(() => {
+                input.value = '';
+                closeNewsletterModal();
+            });
+        }
+
+        // --- 1. Newsletter Popup Logic ---
+        function closeNewsletterModal() {
+            const nlModal = document.getElementById('newsletter-modal');
+            const nlCard = document.getElementById('newsletter-card');
+            nlModal.classList.add('opacity-0');
+            nlCard.classList.remove('scale-100', 'translate-y-0');
+            nlCard.classList.add('scale-95', 'translate-y-4');
+            setTimeout(() => {
+                nlModal.classList.add('hidden');
+            }, 500);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const nlModal = document.getElementById('newsletter-modal');
+                const nlCard = document.getElementById('newsletter-card');
+                nlModal.classList.remove('hidden');
+                
+                // Allow display:block to paint before animating opacity
+                setTimeout(() => {
+                    nlModal.classList.remove('opacity-0');
+                    nlCard.classList.remove('scale-95', 'translate-y-4');
+                    nlCard.classList.add('scale-100', 'translate-y-0');
+                }, 50);
+            }, 12000); // 12 Seconds delay
+        });
+
+
+        // --- 2. Signup/Login Modal Logic ---
+        const signupModal = document.getElementById('signup-modal');
+        const signupCard = document.getElementById('signup-card');
+
+        function openSignupModal() {
+            signupModal.classList.remove('hidden');
+            setTimeout(() => {
+                signupModal.classList.remove('opacity-0');
+                signupCard.classList.remove('scale-95');
+                signupCard.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeSignupModal() {
+            signupModal.classList.add('opacity-0');
+            signupCard.classList.remove('scale-100');
+            signupCard.classList.add('scale-95');
+            setTimeout(() => {
+                signupModal.classList.add('hidden');
+            }, 300);
+        }
+
+        function toggleAuth(type) {
+            const signupForm = document.getElementById('signup-form');
+            const loginForm = document.getElementById('login-form');
+
+            if (type === 'login') {
+                signupForm.classList.add('hidden');
+                signupForm.classList.remove('block');
+                loginForm.classList.remove('hidden');
+                loginForm.classList.add('block');
+            } else {
+                loginForm.classList.add('hidden');
+                loginForm.classList.remove('block');
+                signupForm.classList.remove('hidden');
+                signupForm.classList.add('block');
+            }
+        }
+
+        // --- 3. Mobile Menu Logic ---
+        const openMenuBtn = document.getElementById('open-menu');
+        const closeMenuBtn = document.getElementById('close-menu');
+        const menu = document.getElementById('menu');
+        const menuItems = menu.querySelectorAll('#menu a');
+
+        function openMenu() {
+            menu.classList.remove('max-md:w-0', 'max-md:opacity-0');
+            menu.classList.add('max-md:w-full', 'max-md:opacity-100');
+        }
+
+        function closeMenu() {
+            menu.classList.remove('max-md:w-full', 'max-md:opacity-100');
+            menu.classList.add('max-md:w-0', 'max-md:opacity-0');
+        }
+
+        openMenuBtn.addEventListener('click', openMenu);
+        closeMenuBtn.addEventListener('click', closeMenu);
+        menuItems.forEach(item => item.addEventListener('click', closeMenu));
+
+
+        // --- 4. Custom Dropdown Logic ---
+        document.querySelectorAll('.custom-dropdown').forEach(dropdown => {
+            const toggle = dropdown.querySelector('.dropdown-toggle');
+            const dropdownMenu = dropdown.querySelector('.dropdown-menu');
+
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Close others
+                document.querySelectorAll('.dropdown-menu').forEach(m => {
+                    if (m !== dropdownMenu) {
+                        m.classList.add('hidden', 'opacity-0');
+                    }
+                });
+                dropdownMenu.classList.toggle('hidden');
+                setTimeout(() => dropdownMenu.classList.toggle('opacity-0'), 10);
+            });
+        });
+
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.dropdown-menu').forEach(m => {
+                m.classList.add('opacity-0');
+                setTimeout(() => m.classList.add('hidden'), 200);
+            });
+        });
+
+
+        // --- 4.5 Addons Data & Rendering ---
+        const addonData = [
+            {
+                id: 'addon-trade-copier',
+                name: 'Trade Copier',
+                desc: 'Mirror trades across unlimited NinjaTrader accounts in real time with sub-millisecond latency.',
+                features: ['Unlimited slave accounts', 'Symbol mapping', 'Partial close support', 'Custom risk filters'],
+                image: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="140" viewBox="0 0 200 140"><rect width="200" height="140" rx="12" fill="#f0fdf4"/><rect x="20" y="30" width="70" height="80" rx="8" fill="#bbf7d0" stroke="#86efac" stroke-width="2"/><text x="55" y="65" text-anchor="middle" font-size="11" fill="#166534" font-family="monospace">NT8</text><text x="55" y="85" text-anchor="middle" font-size="9" fill="#166534" font-family="monospace">Master</text><path d="M95 70h15M110 65l8 5-8 5" stroke="#22c55e" stroke-width="2.5" fill="none"/><rect x="118" y="30" width="62" height="38" rx="6" fill="#dcfce7" stroke="#86efac" stroke-width="1.5"/><text x="149" y="53" text-anchor="middle" font-size="8" fill="#166534" font-family="monospace">Slave 1</text><rect x="118" y="73" width="62" height="38" rx="6" fill="#dcfce7" stroke="#86efac" stroke-width="1.5"/><text x="149" y="96" text-anchor="middle" font-size="8" fill="#166534" font-family="monospace">Slave 2</text></svg>')
+            },
+            {
+                id: 'addon-social-copier',
+                name: 'Social Trade Copier',
+                desc: 'Generate a share code and let other traders mirror your trades automatically. Anyone with your code can subscribe to your signals — no manual signal copying required.',
+                features: ['Shareable trade codes', 'Real-time mirroring', 'Per-account toggle', 'Code expiration control'],
+                image: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="140" viewBox="0 0 200 140"><rect width="200" height="140" rx="12" fill="#f5f3ff"/><circle cx="50" cy="50" r="18" fill="#ddd6fe" stroke="#a78bfa" stroke-width="2"/><text x="50" y="54" text-anchor="middle" font-size="11" fill="#5b21b6" font-family="monospace">U1</text><rect x="72" y="40" width="56" height="20" rx="6" fill="#ede9fe" stroke="#c4b5fd" stroke-width="1.5"/><text x="100" y="54" text-anchor="middle" font-size="8" fill="#6d28d9" font-family="monospace">#A7K32</text><path d="M132 50h14M146 45l6 5-6 5" stroke="#a78bfa" stroke-width="2.5" fill="none"/><circle cx="156" cy="50" r="18" fill="#ddd6fe" stroke="#a78bfa" stroke-width="2"/><text x="156" y="54" text-anchor="middle" font-size="11" fill="#5b21b6" font-family="monospace">U2</text><path d="M50 72v15M50 87h-8M50 87h8" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round"/><path d="M156 72v15M156 87h-8M156 87h8" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round"/><rect x="80" y="85" width="55" height="6" rx="3" fill="#ede9fe"/><rect x="80" y="96" width="40" height="6" rx="3" fill="#ede9fe"/><rect x="80" y="107" width="50" height="6" rx="3" fill="#ede9fe"/></svg>')
+            },
+            {
+                id: 'addon-alert-engine',
+                name: 'Alert Engine X',
+                desc: 'Advanced multi-condition alerting system that triggers webhooks, emails, and Telegram messages when your custom criteria are met.',
+                features: ['Multi-condition logic', 'Webhook + Telegram', 'Sound alerts', 'Email notifications'],
+                image: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="140" viewBox="0 0 200 140"><rect width="200" height="140" rx="12" fill="#fef3c7"/><circle cx="60" cy="50" r="20" fill="#fcd34d" stroke="#f59e0b" stroke-width="2"/><circle cx="60" cy="50" r="12" fill="#fef3c7"/><circle cx="60" cy="50" r="5" fill="#f59e0b"/><path d="M60 72v12M60 84h8M60 84h-8" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/><path d="M85 35h55M85 50h40M85 65h25" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/><ellipse cx="145" cy="55" rx="8" ry="4" fill="none" stroke="#f59e0b" stroke-width="1.5"/><path d="M130 70c8 4 15 2 20-5" stroke="#fbbf24" stroke-width="2" fill="none" stroke-linecap="round"/></svg>')
+            },
+            {
+                id: 'addon-tpo-charts',
+                name: 'TPO Charts',
+                desc: 'The most customizable Time Price Opportunity charts available for NinjaTrader. Visualize auction market theory with unmatched clarity and precision.',
+                features: ['Custom time brackets', 'Split & merge profiles', 'Volume node overlay', 'Export to PNG/SVG'],
+                image: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="140" viewBox="0 0 200 140"><defs><clipPath id="tc"><rect width="200" height="140" rx="12"/></clipPath></defs><g clip-path="url(#tc)"><rect width="200" height="140" rx="12" fill="#fff7ed"/><rect x="22" y="44" width="108" height="47" rx="4" fill="#ffedd5" opacity="0.95"/><rect x="25" y="29" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="31" y="29" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="25" y="35" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="31" y="35" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="37" y="35" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="43" y="35" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="25" y="41" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="31" y="41" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="37" y="41" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="43" y="41" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="49" y="41" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="55" y="41" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="61" y="41" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="25" y="47" width="5" height="5" rx="1" fill="#fb923c"/><rect x="31" y="47" width="5" height="5" rx="1" fill="#fb923c"/><rect x="37" y="47" width="5" height="5" rx="1" fill="#fb923c"/><rect x="43" y="47" width="5" height="5" rx="1" fill="#fb923c"/><rect x="49" y="47" width="5" height="5" rx="1" fill="#fb923c"/><rect x="55" y="47" width="5" height="5" rx="1" fill="#fb923c"/><rect x="61" y="47" width="5" height="5" rx="1" fill="#fb923c"/><rect x="67" y="47" width="5" height="5" rx="1" fill="#fb923c"/><rect x="73" y="47" width="5" height="5" rx="1" fill="#fb923c"/><rect x="79" y="47" width="5" height="5" rx="1" fill="#fb923c"/><rect x="25" y="53" width="5" height="5" rx="1" fill="#fb923c"/><rect x="31" y="53" width="5" height="5" rx="1" fill="#fb923c"/><rect x="37" y="53" width="5" height="5" rx="1" fill="#fb923c"/><rect x="43" y="53" width="5" height="5" rx="1" fill="#fb923c"/><rect x="49" y="53" width="5" height="5" rx="1" fill="#fb923c"/><rect x="55" y="53" width="5" height="5" rx="1" fill="#fb923c"/><rect x="61" y="53" width="5" height="5" rx="1" fill="#fb923c"/><rect x="67" y="53" width="5" height="5" rx="1" fill="#fb923c"/><rect x="73" y="53" width="5" height="5" rx="1" fill="#fb923c"/><rect x="79" y="53" width="5" height="5" rx="1" fill="#fb923c"/><rect x="85" y="53" width="5" height="5" rx="1" fill="#fb923c"/><rect x="91" y="53" width="5" height="5" rx="1" fill="#fb923c"/><rect x="97" y="53" width="5" height="5" rx="1" fill="#fb923c"/><rect x="25" y="59" width="5" height="5" rx="1" fill="#fb923c"/><rect x="31" y="59" width="5" height="5" rx="1" fill="#fb923c"/><rect x="37" y="59" width="5" height="5" rx="1" fill="#fb923c"/><rect x="43" y="59" width="5" height="5" rx="1" fill="#fb923c"/><rect x="49" y="59" width="5" height="5" rx="1" fill="#fb923c"/><rect x="55" y="59" width="5" height="5" rx="1" fill="#fb923c"/><rect x="61" y="59" width="5" height="5" rx="1" fill="#fb923c"/><rect x="67" y="59" width="5" height="5" rx="1" fill="#fb923c"/><rect x="73" y="59" width="5" height="5" rx="1" fill="#fb923c"/><rect x="79" y="59" width="5" height="5" rx="1" fill="#fb923c"/><rect x="85" y="59" width="5" height="5" rx="1" fill="#fb923c"/><rect x="91" y="59" width="5" height="5" rx="1" fill="#fb923c"/><rect x="97" y="59" width="5" height="5" rx="1" fill="#fb923c"/><rect x="103" y="59" width="5" height="5" rx="1" fill="#fb923c"/><rect x="109" y="59" width="5" height="5" rx="1" fill="#fb923c"/><rect x="25" y="65" width="5" height="5" rx="1" fill="#fb923c"/><rect x="31" y="65" width="5" height="5" rx="1" fill="#fb923c"/><rect x="37" y="65" width="5" height="5" rx="1" fill="#fb923c"/><rect x="43" y="65" width="5" height="5" rx="1" fill="#fb923c"/><rect x="49" y="65" width="5" height="5" rx="1" fill="#fb923c"/><rect x="55" y="65" width="5" height="5" rx="1" fill="#fb923c"/><rect x="61" y="65" width="5" height="5" rx="1" fill="#fb923c"/><rect x="67" y="65" width="5" height="5" rx="1" fill="#fb923c"/><rect x="73" y="65" width="5" height="5" rx="1" fill="#fb923c"/><rect x="79" y="65" width="5" height="5" rx="1" fill="#fb923c"/><rect x="85" y="65" width="5" height="5" rx="1" fill="#fb923c"/><rect x="91" y="65" width="5" height="5" rx="1" fill="#fb923c"/><rect x="97" y="65" width="5" height="5" rx="1" fill="#fb923c"/><rect x="103" y="65" width="5" height="5" rx="1" fill="#fb923c"/><rect x="109" y="65" width="5" height="5" rx="1" fill="#fb923c"/><rect x="115" y="65" width="5" height="5" rx="1" fill="#fb923c"/><rect x="121" y="65" width="5" height="5" rx="1" fill="#fb923c"/><rect x="25" y="71" width="5" height="5" rx="1" fill="#fb923c"/><rect x="31" y="71" width="5" height="5" rx="1" fill="#fb923c"/><rect x="37" y="71" width="5" height="5" rx="1" fill="#fb923c"/><rect x="43" y="71" width="5" height="5" rx="1" fill="#fb923c"/><rect x="49" y="71" width="5" height="5" rx="1" fill="#fb923c"/><rect x="55" y="71" width="5" height="5" rx="1" fill="#fb923c"/><rect x="61" y="71" width="5" height="5" rx="1" fill="#fb923c"/><rect x="67" y="71" width="5" height="5" rx="1" fill="#fb923c"/><rect x="73" y="71" width="5" height="5" rx="1" fill="#fb923c"/><rect x="79" y="71" width="5" height="5" rx="1" fill="#fb923c"/><rect x="85" y="71" width="5" height="5" rx="1" fill="#fb923c"/><rect x="91" y="71" width="5" height="5" rx="1" fill="#fb923c"/><rect x="97" y="71" width="5" height="5" rx="1" fill="#fb923c"/><rect x="103" y="71" width="5" height="5" rx="1" fill="#fb923c"/><rect x="109" y="71" width="5" height="5" rx="1" fill="#fb923c"/><rect x="115" y="71" width="5" height="5" rx="1" fill="#fb923c"/><rect x="121" y="71" width="5" height="5" rx="1" fill="#fb923c"/><rect x="25" y="77" width="5" height="5" rx="1" fill="#fb923c"/><rect x="31" y="77" width="5" height="5" rx="1" fill="#fb923c"/><rect x="37" y="77" width="5" height="5" rx="1" fill="#fb923c"/><rect x="43" y="77" width="5" height="5" rx="1" fill="#fb923c"/><rect x="49" y="77" width="5" height="5" rx="1" fill="#fb923c"/><rect x="55" y="77" width="5" height="5" rx="1" fill="#fb923c"/><rect x="61" y="77" width="5" height="5" rx="1" fill="#fb923c"/><rect x="67" y="77" width="5" height="5" rx="1" fill="#fb923c"/><rect x="73" y="77" width="5" height="5" rx="1" fill="#fb923c"/><rect x="79" y="77" width="5" height="5" rx="1" fill="#fb923c"/><rect x="85" y="77" width="5" height="5" rx="1" fill="#fb923c"/><rect x="91" y="77" width="5" height="5" rx="1" fill="#fb923c"/><rect x="97" y="77" width="5" height="5" rx="1" fill="#fb923c"/><rect x="103" y="77" width="5" height="5" rx="1" fill="#fb923c"/><rect x="109" y="77" width="5" height="5" rx="1" fill="#fb923c"/><rect x="25" y="83" width="5" height="5" rx="1" fill="#fb923c"/><rect x="31" y="83" width="5" height="5" rx="1" fill="#fb923c"/><rect x="37" y="83" width="5" height="5" rx="1" fill="#fb923c"/><rect x="43" y="83" width="5" height="5" rx="1" fill="#fb923c"/><rect x="49" y="83" width="5" height="5" rx="1" fill="#fb923c"/><rect x="55" y="83" width="5" height="5" rx="1" fill="#fb923c"/><rect x="61" y="83" width="5" height="5" rx="1" fill="#fb923c"/><rect x="67" y="83" width="5" height="5" rx="1" fill="#fb923c"/><rect x="73" y="83" width="5" height="5" rx="1" fill="#fb923c"/><rect x="79" y="83" width="5" height="5" rx="1" fill="#fb923c"/><rect x="85" y="83" width="5" height="5" rx="1" fill="#fb923c"/><rect x="91" y="83" width="5" height="5" rx="1" fill="#fb923c"/><rect x="97" y="83" width="5" height="5" rx="1" fill="#fb923c"/><rect x="25" y="89" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="31" y="89" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="37" y="89" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="43" y="89" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="49" y="89" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="55" y="89" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="61" y="89" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="67" y="89" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="73" y="89" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="79" y="89" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="25" y="95" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="31" y="95" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="37" y="95" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="43" y="95" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="49" y="95" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="55" y="95" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="61" y="95" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="25" y="101" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="31" y="101" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="37" y="101" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="43" y="101" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="25" y="107" width="5" height="5" rx="1" fill="#fed7aa"/><rect x="31" y="107" width="5" height="5" rx="1" fill="#fed7aa"/><line x1="22" y1="68" x2="132" y2="68" stroke="#dc2626" stroke-width="2" stroke-linecap="round" opacity="0.85"/><circle cx="22" cy="68" r="2.5" fill="#dc2626" opacity="0.85"/><circle cx="132" cy="68" r="2.5" fill="#dc2626" opacity="0.85"/><text x="138" y="70" text-anchor="start" font-size="7" fill="#dc2626" font-family="monospace" font-weight="bold">POC</text></g></svg>')
+            },
+            {
+                id: 'addon-risk-manager',
+                name: 'Risk Manager Elite',
+                desc: 'Set daily loss limits, max position sizes, and correlation-aware exposure caps. Automatically flatten when limits are breached.',
+                features: ['Daily PnL stops', 'Position sizing', 'Correlation matrix', 'One-click flatten'],
+                image: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="140" viewBox="0 0 200 140"><rect width="200" height="140" rx="12" fill="#f0f9ff"/><rect x="60" y="15" width="80" height="6" rx="3" fill="#bae6fd"/><rect x="60" y="26" width="55" height="6" rx="3" fill="#7dd3fc"/><rect x="60" y="37" width="70" height="6" rx="3" fill="#bae6fd"/><rect x="60" y="48" width="40" height="6" rx="3" fill="#7dd3fc"/><rect x="60" y="59" width="65" height="6" rx="3" fill="#bae6fd"/><line x1="70" y1="75" x2="70" y2="120" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,3"/><text x="70" y="135" text-anchor="middle" font-size="9" fill="#ef4444" font-family="monospace">LIMIT</text><rect x="78" y="78" width="8" height="38" rx="2" fill="#3b82f6"/><rect x="90" y="82" width="8" height="34" rx="2" fill="#3b82f6"/><rect x="102" y="75" width="8" height="41" rx="2" fill="#3b82f6"/><rect x="114" y="88" width="8" height="28" rx="2" fill="#3b82f6"/><rect x="126" y="80" width="8" height="36" rx="2" fill="#3b82f6"/></svg>')
+            }
+        ];
+
+        function renderAddonCards() {
+            const container = document.getElementById('addons-list');
+            if (!container) return;
+
+            addonData.forEach(addon => {
+                const card = document.createElement('div');
+                card.className = 'bg-white border border-teal-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col md:flex-row min-h-[210px]';
+                card.innerHTML = `
+                    <div class="md:w-[360px] shrink-0 bg-gradient-to-br from-doom-light to-white flex items-center justify-center p-8 border-b md:border-b-0 md:border-r border-teal-100">
+                        <img src="${addon.image}" alt="${addon.name}" class="w-full max-w-[260px] h-auto rounded-lg" />
+                    </div>
+                    <div class="flex-1 p-6 md:py-8 md:px-10 flex flex-col justify-center">
+                        <h3 class="text-lg font-bold text-zinc-900 mb-1">${addon.name}</h3>
+                        <p class="text-sm text-zinc-500 mb-3 leading-relaxed">${addon.desc}</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            ${addon.features.map(f => `<span class="inline-flex items-center gap-1 text-xs font-medium text-doom-accent bg-teal-50 border border-teal-100 rounded-full px-2.5 py-1"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>${f}</span>`).join('')}
+                        </div>
+                        <button onclick="showAddonDetail('${addon.id}')" class="self-start flex items-center gap-1.5 text-sm font-semibold text-doom-accent hover:text-doom-accentHover transition group">
+                            View Details
+                            <svg class="group-hover:translate-x-1 transition-transform" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Detail content templates — richer per-addon info
+        const addonDetailContent = {
+            'addon-trade-copier': {
+                name: 'Trade Copier',
+                desc: 'Mirror trades across unlimited NinjaTrader accounts in real time with sub-millisecond latency.',
+                longDesc: 'Trade Copier is a high-performance replication engine built for professional traders running multiple NinjaTrader instances. Whether you trade across prop firm accounts or manage a small group of funded accounts, this addon ensures every order is mirrored precisely and instantly.',
+                highlights: ['Sub-millisecond trade replication', 'Unlimited slave account connections', 'Customizable lot/contract multipliers per slave', 'Built-in symbol mapping for different broker conventions', 'Partial close and trailing stop replication'],
+                price: '$149'
+            },
+            'addon-social-copier': {
+                name: 'Social Trade Copier',
+                desc: 'Generate a share code and let other traders mirror your trades automatically.',
+                longDesc: 'Social Trade Copier lets you generate a unique trade code that you can share with other traders. Anyone who enters your code into their Social Trade Copier setup can assign it to a specific NinjaTrader account — and from that moment on, every trade you take is mirrored into their account in real time. Perfect for signal providers, trading groups, or mentorship setups.',
+                highlights: ['Generate and share unique trade codes', 'Real-time trade mirroring for followers', 'Per-account toggle — choose which account follows', 'Code expiration and revocation controls', 'Detailed subscription dashboard'],
+                price: '$199'
+            },
+            'addon-alert-engine': {
+                name: 'Alert Engine X',
+                desc: 'Advanced multi-condition alerting that triggers webhooks, emails, and Telegram messages.',
+                longDesc: 'Alert Engine X sits on top of your NinjaTrader platform and monitors any combination of indicator values, price levels, and order flow events. When your criteria are met, it fires alerts through your preferred channels — webhooks for automation, Telegram for instant mobile notifications, or good old email.',
+                highlights: ['Unlimited alert conditions with AND/OR logic', 'Webhook, Telegram, Email, and audible alerts', 'Template library for common patterns', 'Time-of-day and day-of-week scheduling', 'Persistent alert history log'],
+                price: '$99'
+            },
+            'addon-tpo-charts': {
+                name: 'TPO Charts',
+                desc: 'The most customizable Time Price Opportunity charts available for NinjaTrader.',
+                longDesc: 'TPO Charts brings professional-grade auction market theory visualization to NinjaTrader. Unlike anything else on the platform, these charts let you customize every aspect — from time bracket splits and profile merging to volume node overlays and color-coded value areas. Whether you\'re a discretionary trader reading market structure or automating profile analysis, TPO Charts gives you the edge.',
+                highlights: ['Custom time bracket definitions (RTH, ETH, custom)', 'Split and merge profiles across multiple sessions', 'Volume node overlay on any profile', 'Export profiles as PNG or SVG for sharing', 'Color-coded value areas with adjustable thresholds'],
+                price: '$89'
+            },
+            'addon-risk-manager': {
+                name: 'Risk Manager Elite',
+                desc: 'Set daily loss limits, max position sizes, and correlation-aware exposure caps.',
+                longDesc: 'Risk Manager Elite is your last line of defense. Define hard daily PnL stops, maximum contract exposure, and correlation-aware position limits. If any threshold is breached, the addon automatically flattens all positions and locks you out for the remainder of the session — no exceptions, no emotions.',
+                highlights: ['Daily and session PnL hard stops', 'Max contracts per instrument & per portfolio', 'Correlation matrix for true net exposure', 'One-click flatten all + auto-lockout', 'Pre-trade risk check before any order is sent'],
+                price: '$129'
+            }
+        };
+
+        function showAddonDetail(addonId) {
+            const detail = addonDetailContent[addonId];
+            if (!detail) return;
+
+            // Switch to detail view
+            ['home-view', 'docs-view', 'tos-view', 'privacy-view', 'strategy-detail-view', 'addon-detail-view'].forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.add('hidden');
+                el.classList.remove('block');
+            });
+            const detailView = document.getElementById('addon-detail-view');
+            detailView.classList.remove('hidden');
+            detailView.classList.add('block');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            const content = document.getElementById('addon-detail-content');
+            content.innerHTML = `
+                <div class="flex flex-col md:flex-row gap-8 mb-10">
+                    <div class="md:w-[400px] shrink-0 bg-gradient-to-br from-doom-light to-white border border-teal-100 rounded-2xl flex items-center justify-center p-8">
+                        <img src="${addonData.find(a => a.id === addonId).image}" alt="${detail.name}" class="w-full max-w-[360px] h-auto rounded-lg" />
+                    </div>
+                    <div class="flex-1">
+                        <h1 class="text-3xl md:text-4xl font-bold text-zinc-900 mb-2">${detail.name}</h1>
+                        <p class="text-base text-zinc-500 mb-6">${detail.desc}</p>
+                        <p class="text-lg font-bold text-doom-accent mb-6">${detail.price}</p>
+                        <button onclick="openSignupModal()" class="bg-doom-accent hover:bg-doom-accentHover text-white px-8 py-3 rounded-full text-sm font-semibold transition shadow-lg shadow-teal-900/20 active:scale-95">
+                            Get This Addon
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-teal-100 rounded-2xl p-8 shadow-sm">
+                    <h2 class="text-xl font-bold text-zinc-900 mb-4">Overview</h2>
+                    <p class="text-zinc-600 leading-relaxed mb-8">${detail.longDesc}</p>
+
+                    <h2 class="text-xl font-bold text-zinc-900 mb-4">Key Features</h2>
+                    <ul class="space-y-3">
+                        ${detail.highlights.map(h => `
+                            <li class="flex items-start gap-3">
+                                <div class="size-5 rounded-full bg-teal-100 flex items-center justify-center mt-0.5 shrink-0">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#115e59" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                </div>
+                                <span class="text-sm text-zinc-700">${h}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        // Render addons on load
+        document.addEventListener('DOMContentLoaded', () => {
+            renderAddonCards();
+        });
+
+        // --- Rotating trait word in \"Built for ___ Traders\" ---
+        (function() {
+            const words = ['Systematic', 'Algorithmic', 'Retail', 'Professional', 'Disciplined', 'Quantitative'];
+            let currentIndex = 0;
+            const el = document.getElementById('rotating-trait');
+            if (!el) return;
+            setInterval(() => {
+                currentIndex = (currentIndex + 1) % words.length;
+                el.style.opacity = '0';
+                setTimeout(() => {
+                    el.textContent = words[currentIndex];
+                    el.style.opacity = '1';
+                }, 250);
+            }, 2500);
+        })();
+
+        // --- 5. Mock Data & Grid Generation ---
+        const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(val);
+
+        const generateChartData = (base, volatility, trend, length = 60) => {
+            let data = [];
+            let current = base;
+            for(let i=0; i<length; i++) {
+                current += (Math.random() * volatility) - (volatility/2) + trend;
+                data.push(Math.round(current));
+            }
+            return data;
+        };
+
+        const strategies = [
+            { id: '1833592103', symbol: 'EURUSD', tf: 'M30', days: 89, profit: 607, pf: 1.52, trades: 211, dd: 1.77, contracts: 0.15, sl: 98, chartData: generateChartData(1000, 50, 5) },
+            { id: '1746343112', symbol: 'NQ', tf: 'M5', days: 6, profit: 3938, pf: 1.48, trades: 229, dd: 5.25, contracts: 2.00, sl: 450, chartData: generateChartData(5000, 200, 25) },
+            { id: '1394922629', symbol: 'ES', tf: 'M15', days: 82, profit: 685, pf: 1.47, trades: 238, dd: 2.25, contracts: 1.00, sl: 125, chartData: generateChartData(2000, 80, 8) },
+            { id: '2984716253', symbol: 'GC', tf: 'H1', days: 120, profit: 8450, pf: 2.15, trades: 412, dd: 8.40, contracts: 1.00, sl: 200, chartData: generateChartData(8000, 300, 40) },
+            { id: '4758291034', symbol: 'CL', tf: 'M5', days: 14, profit: 1240, pf: 1.65, trades: 145, dd: 4.10, contracts: 0.50, sl: 180, chartData: generateChartData(3000, 150, 15) },
+            { id: '5849302194', symbol: 'US30', tf: 'M1', days: 3, profit: -120, pf: 0.95, trades: 45, dd: 2.80, contracts: 1.00, sl: 300, chartData: generateChartData(1000, 100, -5) },
+        ];
+
+        const gridContainer = document.getElementById('strategy-grid');
+        const chartInstances = {};
+
+        strategies.forEach((strat, index) => {
+            const isProfit = strat.profit >= 0;
+            const profitColor = isProfit ? 'text-zinc-900' : 'text-red-600';
+            const pfColor = strat.pf >= 1.5 ? 'text-doom-accent' : (strat.pf >= 1.0 ? 'text-amber-600' : 'text-red-600');
+
+            const card = document.createElement('div');
+            card.className = "bg-white border border-teal-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow duration-300 relative z-10";
+            
+            card.innerHTML = `
+                <div class="bg-doom-light/30 rounded-xl p-2 mb-5 border border-teal-50 overflow-hidden">
+                    <div id="chart-${strat.id}" class="h-[200px] w-full"></div>
+                </div>
+
+                <div class="flex justify-between items-start mb-1">
+                    <div>
+                        <h3 class="text-lg font-bold text-zinc-900 flex items-center gap-2">
+                            ${strat.symbol} <span class="text-zinc-400 font-medium text-sm px-1.5 py-0.5 bg-zinc-100 rounded">${strat.tf}</span>
+                        </h3>
+                        <p class="text-sm text-zinc-500 font-mono mt-0.5">#${strat.id}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openStrategyDetail('${strat.id}')" class="p-1.5 text-zinc-400 hover:text-doom-accent hover:bg-teal-50 rounded-md transition" title="View Trades / Overview">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                        </button>
+                        <span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-medium bg-teal-50 text-doom-accent border border-teal-100">
+                            <span class="size-1.5 inline-block bg-doom-accent rounded-full"></span>
+                            Active
+                        </span>
+                    </div>
+                </div>
+                <p class="text-xs text-zinc-500 mb-5">Created ${strat.days} days ago</p>
+
+                <hr class="border-t border-teal-50 mb-5">
+
+                <div class="grid grid-cols-3 gap-y-4 gap-x-2">
+                    <div>
+                        <p class="text-xs font-medium text-zinc-500 uppercase tracking-wide">Profit</p>
+                        <p class="text-base font-bold ${profitColor} mt-1">${formatCurrency(strat.profit)}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-zinc-500 uppercase tracking-wide">Profit Factor</p>
+                        <p class="text-base font-bold ${pfColor} mt-1">${strat.pf}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-zinc-500 uppercase tracking-wide">Total Trades</p>
+                        <p class="text-base font-bold text-zinc-800 mt-1">${strat.trades}</p>
+                    </div>
+                    
+                    <div>
+                        <p class="text-xs font-medium text-zinc-500 uppercase tracking-wide">Max Drawdown</p>
+                        <p class="text-sm font-bold text-zinc-800 mt-1">${strat.dd}%</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-zinc-500 uppercase tracking-wide">Contracts</p>
+                        <p class="text-sm font-bold text-zinc-800 mt-1">${strat.contracts}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-zinc-500 uppercase tracking-wide">Stop Loss</p>
+                        <p class="text-sm font-bold text-zinc-800 mt-1">${formatCurrency(strat.sl)}</p>
+                    </div>
+                </div>
+            `;
+            
+            strat.element = card;
+            gridContainer.appendChild(card);
+
+            const options = {
+                series: [{
+                    name: "Profit",
+                    data: strat.chartData
+                }],
+                chart: {
+                    type: 'area',
+                    height: 200,
+                    parentHeightOffset: 0,
+                    toolbar: { show: false },
+                    zoom: { enabled: false },
+                    fontFamily: 'Outfit, sans-serif',
+                    animations: {
+                        enabled: true,
+                        easing: 'easeinout',
+                        speed: 800,
+                        animateGradually: { enabled: false },
+                        dynamicAnimation: { enabled: true, speed: 800 }
+                    }
+                },
+                colors: ['#115e59'],
+                dataLabels: { enabled: false },
+                stroke: { curve: 'straight', width: 2 },
+                fill: {
+                    type: 'gradient',
+                    gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.0, stops: [0, 100] }
+                },
+                xaxis: {
+                    labels: { show: false },
+                    axisBorder: { show: false },
+                    axisTicks: { show: false },
+                    tooltip: { enabled: false }
+                },
+                yaxis: {
+                    labels: {
+                        style: { colors: '#71717a', fontSize: '11px' },
+                        formatter: (val) => { return val > 1000 ? (val/1000).toFixed(1) + 'k' : Math.round(val) }
+                    }
+                },
+                grid: {
+                    borderColor: '#e4e4e7',
+                    strokeDashArray: 3,
+                    xaxis: { lines: { show: false } },
+                    yaxis: { lines: { show: true } },
+                    padding: { top: 5, right: 0, bottom: 0, left: 10 }
+                },
+                tooltip: {
+                    theme: 'light',
+                    y: { formatter: function (val) { return formatCurrency(val) } }
+                }
+            };
+
+            const chart = new ApexCharts(document.querySelector(`#chart-${strat.id}`), options);
+            chart.render();
+            chartInstances[strat.id] = chart;
+        });
+
+        // --- 6. Chart Lookback Animation ---
+        document.querySelectorAll('.timeframe-opt').forEach(opt => {
+            opt.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.timeframe-opt').forEach(el => {
+                    el.classList.remove('bg-teal-50', 'text-doom-accent', 'font-medium');
+                    el.classList.add('text-zinc-700');
+                });
+                opt.classList.add('bg-teal-50', 'text-doom-accent', 'font-medium');
+                opt.classList.remove('text-zinc-700');
+                document.getElementById('current-tf-label').innerHTML = `Lookback: ${opt.dataset.label} <svg class="size-4 text-zinc-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
+
+                const lengths = { '1 Day': 12, '1 Week': 30, '1 Month': 60, 'All': 120 };
+                const newLength = lengths[opt.dataset.label] || 60;
+                
+                strategies.forEach(strat => {
+                    const base = strat.profit > 1000 ? 5000 : 1000;
+                    const vol = strat.profit > 1000 ? 200 : 50;
+                    const trend = strat.profit > 0 ? (strat.pf * 5) : -5;
+                    const newData = generateChartData(base, vol, trend, newLength);
+                    chartInstances[strat.id].updateSeries([{ data: newData }]);
+                });
+            });
+        });
+
+        // --- 7. Smooth Sorting ---
+        document.querySelectorAll('.sort-opt').forEach(opt => {
+            opt.addEventListener('click', (e) => {
+                e.preventDefault();
+                const sortBy = opt.dataset.sort;
+
+                document.querySelectorAll('.sort-opt').forEach(el => {
+                    el.classList.remove('bg-teal-50', 'text-doom-accent', 'font-medium');
+                    el.classList.add('text-zinc-700');
+                    el.querySelector('.sort-icon').classList.add('hidden');
+                });
+                opt.classList.add('bg-teal-50', 'text-doom-accent', 'font-medium');
+                opt.classList.remove('text-zinc-700');
+                opt.querySelector('.sort-icon').classList.remove('hidden');
+                document.getElementById('current-sort-label').innerHTML = `Sort by: ${opt.dataset.label} <svg class="size-4 text-zinc-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
+
+                const firstRects = {};
+                strategies.forEach(s => { firstRects[s.id] = s.element.getBoundingClientRect(); });
+
+                strategies.sort((a, b) => {
+                    if (sortBy === 'pf') return b.pf - a.pf;
+                    if (sortBy === 'profit') return b.profit - a.profit;
+                    if (sortBy === 'trades') return b.trades - a.trades;
+                    if (sortBy === 'dd') return a.dd - b.dd; 
+                    return 0;
+                });
+
+                strategies.forEach(s => gridContainer.appendChild(s.element));
+
+                strategies.forEach(s => {
+                    const lastRect = s.element.getBoundingClientRect();
+                    const deltaX = firstRects[s.id].left - lastRect.left;
+                    const deltaY = firstRects[s.id].top - lastRect.top;
+
+                    if (deltaX !== 0 || deltaY !== 0) {
+                        s.element.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+                        s.element.style.transition = 'none';
+                        s.element.style.zIndex = '20';
+
+                        requestAnimationFrame(() => {
+                            s.element.style.transform = '';
+                            s.element.style.transition = 'transform 500ms cubic-bezier(0.4, 0, 0.2, 1)';
+                            setTimeout(() => s.element.style.zIndex = '10', 500);
+                        });
+                    }
+                });
+            });
+        });
+
+        // --- 8. FAQ Accordion Logic ---
+        const faqsData = [
+            {
+                question: 'What platform do these strategies run on?',
+                answer: 'All our algorithms are compiled specifically for NinjaTrader 8. You will receive a standard assembly file that imports directly into your NT8 control center.'
+            },
+            {
+                question: 'Do I need any programming experience to use these?',
+                answer: 'Not at all. Once you purchase a strategy, you just import the file and add it to your chart exactly like a standard indicator. All settings are pre-configured.'
+            },
+            {
+                question: 'Are the metrics based on backtests or live data?',
+                answer: 'The cards show forward-tested, out-of-sample data. We use robust historical backtesting for initial development, but the metrics displayed here represent live market execution.'
+            },
+            {
+                question: 'Do you provide updates to the algorithms?',
+                answer: 'Yes. Market regimes change, and we periodically issue optimized updates for our active algorithms to all existing customers.'
+            },
+            {
+                question: 'Can I change the contract sizing?',
+                answer: 'Absolutely. While we provide the default tested contract sizing and stop losses in the UI above, everything is fully adjustable from within the NinjaTrader strategy parameters once loaded.'
+            }
+        ];
+
+        const faqContainer = document.getElementById('faqContainer');
+
+        faqContainer.innerHTML = faqsData.map((faq, index) => `
+        <div class="faq-item flex flex-col items-start w-full bg-white border border-teal-50 rounded-lg shadow-sm hover:shadow transition-shadow" data-index="${index}">
+            <div class="faq-header flex items-center justify-between w-full cursor-pointer p-5 transition-all">
+                <h3 class="text-base font-bold text-zinc-900">${faq.question}</h3>
+                <svg class="faq-icon text-doom-accent transition-all duration-500 ease-in-out" width="20" height="20" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m4.5 7.2 3.793 3.793a1 1 0 0 0 1.414 0L13.5 7.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </div>
+            <p class="faq-answer text-sm text-zinc-600 px-5 overflow-hidden max-h-0 opacity-0 -translate-y-2 transition-all duration-500 ease-in-out">
+                ${faq.answer}
+            </p>
+        </div>
+        `).join('');
+
+        document.querySelectorAll('.faq-header').forEach((header, index) => {
+            header.addEventListener('click', () => {
+                const allAnswers = document.querySelectorAll('.faq-answer');
+                const allIcons = document.querySelectorAll('.faq-icon');
+
+                allAnswers.forEach((el, i) => {
+                    if (i === index) {
+                        const isOpen = el.classList.contains('opacity-100');
+                        el.classList.toggle('opacity-100', !isOpen);
+                        el.classList.toggle('max-h-[300px]', !isOpen);
+                        el.classList.toggle('translate-y-0', !isOpen);
+                        el.classList.toggle('pb-5', !isOpen);
+                        el.classList.toggle('max-h-0', isOpen);
+                        el.classList.toggle('-translate-y-2', isOpen);
+                        allIcons[i].classList.toggle('rotate-180', !isOpen);
+                    } else {
+                        el.classList.remove('opacity-100', 'max-h-[300px]', 'translate-y-0', 'pb-5');
+                        el.classList.add('max-h-0', '-translate-y-2');
+                        allIcons[i].classList.remove('rotate-180');
+                    }
+                });
+            });
+        });
+
+        // --- 9. Documentation Tabbed/Scrolljacking Logic ---
+        const docStepsList = ['doc-step-1', 'doc-step-2', 'doc-step-3', 'doc-step-4'];
+        let currentDocStepIndex = 0;
+        let docScrollLocked = false;
+
+        function switchDoc(targetId) {
+            currentDocStepIndex = docStepsList.indexOf(targetId);
+            
+            // Update TOC UI
+            document.querySelectorAll('.toc-link').forEach(link => {
+                const node = link.querySelector('.toc-node');
+                const dot = link.querySelector('.toc-dot');
+                const text = link.querySelector('.toc-text');
+                
+                if (link.dataset.target === targetId) {
+                    node.classList.remove('border-teal-200');
+                    node.classList.add('border-doom-accent');
+                    dot.classList.remove('bg-transparent');
+                    dot.classList.add('bg-doom-accent');
+                    text.classList.remove('text-zinc-500', 'font-medium');
+                    text.classList.add('text-zinc-900', 'font-bold');
+                } else {
+                    node.classList.remove('border-doom-accent');
+                    node.classList.add('border-teal-200');
+                    dot.classList.remove('bg-doom-accent');
+                    dot.classList.add('bg-transparent');
+                    text.classList.remove('text-zinc-900', 'font-bold');
+                    text.classList.add('text-zinc-500', 'font-medium');
+                }
+            });
+
+            // Update Sections (Tab switching with animations - Desktop Only via lg: prefix overrides)
+            document.querySelectorAll('.doc-section').forEach(sec => {
+                if(sec.id === targetId) {
+                    sec.classList.remove('lg:opacity-0', 'lg:translate-y-8', 'lg:pointer-events-none', 'lg:z-0');
+                    sec.classList.add('lg:opacity-100', 'lg:translate-y-0', 'lg:pointer-events-auto', 'lg:z-10');
+                } else {
+                    sec.classList.add('lg:opacity-0', 'lg:translate-y-8', 'lg:pointer-events-none', 'lg:z-0');
+                    sec.classList.remove('lg:opacity-100', 'lg:translate-y-0', 'lg:pointer-events-auto', 'lg:z-10');
+                }
+            });
+        }
+
+        // Scrolljacking event listener on the docs container (Desktop Only)
+        const docsRightArea = document.getElementById('docs-right-area');
+        docsRightArea.addEventListener('wheel', (e) => {
+            // Disable scrolljacking on mobile to allow native vertical scrolling
+            if (window.innerWidth < 1024) return;
+            
+            e.preventDefault();
+            
+            if (docScrollLocked) return;
+            
+            if (e.deltaY > 30 && currentDocStepIndex < docStepsList.length - 1) {
+                // Scrolled Down -> Next Step
+                docScrollLocked = true;
+                switchDoc(docStepsList[currentDocStepIndex + 1]);
+                setTimeout(() => docScrollLocked = false, 600); // Lock for animation duration
+            } else if (e.deltaY < -30 && currentDocStepIndex > 0) {
+                // Scrolled Up -> Previous Step
+                docScrollLocked = true;
+                switchDoc(docStepsList[currentDocStepIndex - 1]);
+                setTimeout(() => docScrollLocked = false, 600); // Lock for animation duration
+            }
+        }, { passive: false });
+
+        // Mobile Intersection Observer for TOC syncing
+        const docSections = document.querySelectorAll('.doc-section');
+        const observer = new IntersectionObserver((entries) => {
+            if (window.innerWidth >= 1024) return; // Only use on mobile where native scrolling applies
+            
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    switchDoc(entry.target.id);
+                }
+            });
+        }, { 
+            rootMargin: '-20% 0px -60% 0px' 
+        });
+
+        docSections.forEach(section => observer.observe(section));
+
+        // --- 10. Strategy Detail View Logic ---
+        let detailChartInstance = null;
+        let currentDetailTrades = [];
+        let tradeSortState = { column: 'id', asc: false };
+
+        function openStrategyDetail(stratId) {
+            const strat = strategies.find(s => s.id === stratId);
+            if (!strat) return;
+
+            // Generate Mock Trades (Now saved globally for sorting)
+            currentDetailTrades = generateMockTrades(strat);
+
+            // Calculate overall win rate
+            const totalWins = currentDetailTrades.filter(t => t.isWin).length;
+            const overallWinRate = ((totalWins / strat.trades) * 100).toFixed(1);
+
+            // Update Headings
+            document.getElementById('detail-title').innerText = `${strat.symbol} - ${strat.tf}`;
+            document.getElementById('detail-subtitle').innerText = `Strategy ID #${strat.id} • Running for ${strat.days} days`;
+
+            // Update Stats Card
+            const profitColor = strat.profit >= 0 ? 'text-zinc-900' : 'text-red-600';
+            const pfColor = strat.pf >= 1.5 ? 'text-doom-accent' : (strat.pf >= 1.0 ? 'text-amber-600' : 'text-red-600');
+            
+            document.getElementById('detail-stats').innerHTML = `
+                <div class="flex justify-between items-center pb-3 border-b border-teal-50">
+                    <span class="text-sm font-medium text-zinc-500">Cumulative Profit</span>
+                    <span class="font-bold ${profitColor} text-base">${formatCurrency(strat.profit)}</span>
+                </div>
+                <div class="flex justify-between items-center pb-3 border-b border-teal-50">
+                    <span class="text-sm font-medium text-zinc-500">Profit Factor</span>
+                    <span class="font-bold ${pfColor} text-base">${strat.pf}</span>
+                </div>
+                <div class="flex justify-between items-center pb-3 border-b border-teal-50">
+                    <span class="text-sm font-medium text-zinc-500">Total Trades</span>
+                    <span class="font-bold text-zinc-800 text-base">${strat.trades}</span>
+                </div>
+                <div class="flex justify-between items-center pb-3 border-b border-teal-50">
+                    <span class="text-sm font-medium text-zinc-500">Win Rate</span>
+                    <span class="font-bold text-zinc-800 text-base">${overallWinRate}%</span>
+                </div>
+                <div class="flex justify-between items-center pb-3 border-b border-teal-50">
+                    <span class="text-sm font-medium text-zinc-500">Max Drawdown</span>
+                    <span class="font-bold text-zinc-800 text-base">${strat.dd}%</span>
+                </div>
+                <div class="flex justify-between items-center pb-3 border-b border-teal-50">
+                    <span class="text-sm font-medium text-zinc-500">Contracts</span>
+                    <span class="font-bold text-zinc-800 text-base">${strat.contracts}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-medium text-zinc-500">Stop Loss</span>
+                    <span class="font-bold text-zinc-800 text-base">${formatCurrency(strat.sl)}</span>
+                </div>
+            `;
+
+            // Reset sort state and render table
+            tradeSortState = { column: 'id', asc: false };
+            renderTradesTable();
+            updateSortIcons('id', false);
+
+            // Reset Toggle UI
+            const toggle = document.getElementById('toggle-drawdown');
+            toggle.checked = false;
+
+            // Render Large Detailed Chart
+            renderDetailChart(strat, currentDetailTrades);
+
+            // Change View
+            showView('strategy-detail-view');
+        }
+
+        function renderTradesTable() {
+            const tradesBody = document.getElementById('trade-history-body');
+            tradesBody.innerHTML = currentDetailTrades.map(t => {
+                const outcomeBadge = t.isWin 
+                    ? `<span class="inline-flex items-center gap-1 py-1 px-2.5 rounded-md text-xs font-semibold bg-teal-50 text-doom-accent border border-teal-100">Win (${t.winRate}%)</span>`
+                    : `<span class="inline-flex items-center gap-1 py-1 px-2.5 rounded-md text-xs font-semibold bg-red-50 text-red-600 border border-red-100">Loss (${t.winRate}%)</span>`;
+                
+                const pnlColor = t.cumPnl >= 0 ? 'text-zinc-900' : 'text-red-600';
+                const indPnlColor = t.indPnl >= 0 ? 'text-doom-accent' : 'text-red-600';
+                const indPnlFormatted = (t.indPnl > 0 ? '+' : '') + formatCurrency(t.indPnl);
+
+                return `
+                    <tr class="hover:bg-zinc-50/50 transition-colors">
+                        <td class="px-3 py-4 text-zinc-500">#${t.id}</td>
+                        <td class="px-3 py-4 text-zinc-500">${t.date}</td>
+                        <td class="px-3 py-4">${outcomeBadge}</td>
+                        <td class="px-3 py-4 font-bold text-zinc-900">${t.asset}</td>
+                        <td class="px-3 py-4">${t.entryPrice}</td>
+                        <td class="px-3 py-4">${t.exitPrice}</td>
+                        <td class="px-3 py-4 text-red-500 font-medium">-${t.drawdown}%</td>
+                        <td class="px-3 py-4 text-right font-medium ${indPnlColor}">${indPnlFormatted}</td>
+                        <td class="px-3 py-4 text-right font-bold ${pnlColor}">${formatCurrency(t.cumPnl)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function sortTradeHistory(column) {
+            if (tradeSortState.column === column) {
+                tradeSortState.asc = !tradeSortState.asc;
+            } else {
+                tradeSortState.column = column;
+                tradeSortState.asc = true; // Default to ascending when sorting a new column
+            }
+
+            currentDetailTrades.sort((a, b) => {
+                let valA = a[column];
+                let valB = b[column];
+
+                if (column === 'date') {
+                    // String manipulate MM-DD-YY to YYMMDD for integer comparison
+                    const pA = valA.split('-');
+                    const pB = valB.split('-');
+                    valA = parseInt(pA[2] + pA[0] + pA[1]);
+                    valB = parseInt(pB[2] + pB[0] + pB[1]);
+                } else if (['entryPrice', 'exitPrice', 'drawdown'].includes(column)) {
+                    valA = parseFloat(valA);
+                    valB = parseFloat(valB);
+                } else if (column === 'isWin') {
+                    valA = a.isWin ? 1 : 0;
+                    valB = b.isWin ? 1 : 0;
+                }
+                
+                if (valA < valB) return tradeSortState.asc ? -1 : 1;
+                if (valA > valB) return tradeSortState.asc ? 1 : -1;
+                return 0;
+            });
+
+            updateSortIcons(column, tradeSortState.asc);
+            renderTradesTable();
+        }
+
+        function updateSortIcons(activeCol, isAsc) {
+            document.querySelectorAll('.th-sort-icon').forEach(icon => {
+                icon.classList.remove('opacity-100', 'text-doom-accent', 'rotate-180');
+                icon.classList.add('opacity-0');
+            });
+            const activeIcon = document.getElementById(`sort-icon-${activeCol}`);
+            if (activeIcon) {
+                activeIcon.classList.remove('opacity-0');
+                activeIcon.classList.add('opacity-100', 'text-doom-accent');
+                if (!isAsc) activeIcon.classList.add('rotate-180');
+            }
+        }
+
+        function generateMockTrades(strat) {
+            const trades = [];
+            let cumPnl = 0;
+            let wins = 0;
+            let currentPrice = strat.symbol === 'NQ' ? 18500 : (strat.symbol === 'ES' ? 5200 : (strat.symbol === 'GC' ? 2300 : 100));
+            
+            // To ensure the mock trades end near the strat's actual stated profit
+            const avgTradeProfit = strat.profit / strat.trades;
+            
+            let currentDate = new Date(2026, 5, 7); // June 7, 2026
+            currentDate.setDate(currentDate.getDate() - strat.days);
+            const msPerTrade = (strat.days * 24 * 60 * 60 * 1000) / strat.trades;
+
+            for(let i = 0; i < strat.trades; i++) {
+                const isWin = Math.random() > 0.45; // Approx 55% win rate
+                if (isWin) wins++;
+                
+                const winRate = ((wins / (i + 1)) * 100).toFixed(1);
+                
+                // Scale realistic PNL jumps
+                const baseChange = isWin ? (avgTradeProfit * 2) : -(avgTradeProfit * 0.9);
+                let pnlChange = baseChange + ((Math.random() * baseChange) - (baseChange / 2));
+                
+                // Force last trade to strictly hit the exact summary card profit value
+                if (i === strat.trades - 1) {
+                    pnlChange = strat.profit - cumPnl;
+                }
+                
+                cumPnl += pnlChange;
+
+                // Date generation
+                currentDate = new Date(currentDate.getTime() + msPerTrade);
+                const mm = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+                const dd = currentDate.getDate().toString().padStart(2, '0');
+                const yy = currentDate.getFullYear().toString().slice(-2);
+                const dateStr = `${mm}-${dd}-${yy}`;
+
+                const priceShift = isWin ? (Math.random() * 10) : -(Math.random() * 5);
+                const exitPrice = currentPrice + priceShift;
+                
+                trades.push({
+                    id: i,
+                    date: dateStr,
+                    isWin,
+                    winRate,
+                    asset: strat.symbol,
+                    entryPrice: currentPrice.toFixed(2),
+                    exitPrice: exitPrice.toFixed(2),
+                    drawdown: (Math.random() * strat.dd).toFixed(2),
+                    indPnl: pnlChange,
+                    cumPnl: cumPnl
+                });
+
+                currentPrice = exitPrice; // Setup next trade entry
+            }
+            return trades.reverse(); // Return newest first for the table
+        }
+
+        function renderDetailChart(strat, mockTrades) {
+            if (detailChartInstance) {
+                detailChartInstance.destroy();
+            }
+
+            // Always clone and reverse mockTrades to chronologically sort for chart 
+            // (independent of the table's current sort state)
+            const chronologicalTrades = [...mockTrades].sort((a,b) => a.id - b.id);
+            const pnlData = chronologicalTrades.map(t => t.cumPnl.toFixed(2));
+            const ddData = chronologicalTrades.map(t => -parseFloat(t.drawdown));
+
+            const options = {
+                series: [
+                    { name: 'Cumulative PNL', type: 'line', data: pnlData },
+                    { name: 'Drawdown %', type: 'column', data: ddData }
+                ],
+                chart: {
+                    height: 350,
+                    type: 'line',
+                    fontFamily: 'Outfit, sans-serif',
+                    toolbar: { show: false },
+                    zoom: { enabled: false },
+                    selection: { enabled: false },
+                    animations: { enabled: true, speed: 600 }
+                },
+                states: {
+                    hover: { filter: { type: 'none' } },
+                    active: { allowMultipleDataPointsSelection: false, filter: { type: 'none' } }
+                },
+                markers: {
+                    size: 0,
+                    hover: { size: 4 }
+                },
+                stroke: { width: [3, 0], curve: 'smooth' },
+                colors: ['#115e59', '#f87171'], // Vertex Teal for PNL, Tailwind Red-400 for DD
+                fill: { opacity: [1, 0.4] }, // Line solid, bars slightly transparent
+                dataLabels: { enabled: false },
+                yaxis: [
+                    {
+                        title: { text: 'Cumulative PNL ($)', style: { color: '#71717a', fontWeight: 500 } },
+                        labels: { formatter: (val) => formatCurrency(val), style: { colors: '#71717a' } }
+                    },
+                    {
+                        opposite: true,
+                        title: { text: 'Drawdown (%)', style: { color: '#f87171', fontWeight: 500 } },
+                        labels: { formatter: (val) => val.toFixed(2) + '%', style: { colors: '#f87171' } },
+                        min: -strat.dd * 1.5, // Buffer room for the bars
+                        max: 0 // Keep bars clinging to the top (zero line)
+                    }
+                ],
+                xaxis: {
+                    categories: chronologicalTrades.map(t => `Trade #${t.id}`),
+                    labels: { show: false },
+                    tooltip: { enabled: false },
+                    axisBorder: { show: false },
+                    axisTicks: { show: false },
+                    crosshairs: { show: true, stroke: { color: '#cbd5e1' } }
+                },
+                grid: {
+                    borderColor: '#f4f4f5',
+                    strokeDashArray: 4,
+                },
+                legend: { show: false },
+                tooltip: {
+                    enabled: true,
+                    theme: 'light',
+                    shared: true,
+                    intersect: false,
+                    y: [
+                        { formatter: (val) => formatCurrency(val) },
+                        { formatter: (val) => Math.abs(val).toFixed(2) + '%' }
+                    ]
+                }
+            };
+
+            // Initialize Drawdown to a hidden state
+            options.series[1].hidden = true;
+
+            detailChartInstance = new ApexCharts(document.querySelector("#detail-chart"), options);
+            detailChartInstance.render();
+        }
+
+        function toggleDrawdown(el) {
+            if (!detailChartInstance) return;
+            if (el.checked) {
+                detailChartInstance.showSeries('Drawdown %');
+            } else {
+                detailChartInstance.hideSeries('Drawdown %');
+            }
+        }
+
+        // --- 11. Customer Support Widget Logic ---
+        let isWidgetOpen = false;
+        let currentTab = 'messages';
+
+        const suggestedResponses = {
+            "How do I install a strategy?": "Easy! First download the `.zip` file from your dashboard. In NinjaTrader 8, head to **Tools > Import > NinjaScript Add-On...** and double-click the `.zip` file. DO NOT unzip or extract the files manually before importing!",
+            "Are default parameters optimized?": "Absolutely. Every algorithmic system is pre-configured with default target stops, volume filters, and trail options mathematically customized for their primary instruments (e.g. NQ, ES, CL, GC). You can freely scale down contract sizing to manage your capital.",
+            "Do you offer refunds?": "Because algorithmic strategies provide immediate access to proprietary source code and execution setups upon purchase, all sales inside the Vertex network are strictly final.",
+            "default": "Thanks for reaching out! I've logged your query for our technical team. You can also head over to the 'Help Desk' tab to see basic troubleshooting checklists."
+        };
+
+        function toggleWidget() {
+            const widget = document.getElementById('chat-widget');
+            const launcher = document.getElementById('widget-launcher');
+            const iconClosed = document.getElementById('icon-chat-closed');
+            const iconOpened = document.getElementById('icon-chat-opened');
+
+            isWidgetOpen = !isWidgetOpen;
+
+            if (isWidgetOpen) {
+                widget.classList.remove('scale-0', 'opacity-0', 'translate-y-10');
+                widget.classList.add('scale-100', 'opacity-100', 'translate-y-0');
+                iconClosed.classList.add('hidden');
+                iconOpened.classList.remove('hidden');
+            } else {
+                widget.classList.remove('scale-100', 'opacity-100', 'translate-y-0');
+                widget.classList.add('scale-0', 'opacity-0', 'translate-y-10');
+                iconOpened.classList.add('hidden');
+                iconClosed.classList.remove('hidden');
+            }
+        }
+
+        function switchTab(tabId) {
+            currentTab = tabId;
+
+            document.getElementById('screen-messages').classList.add('hidden');
+            document.getElementById('screen-help').classList.add('hidden');
+
+            const tabs = ['messages', 'help'];
+            tabs.forEach(tab => {
+                const btn = document.getElementById(`tab-${tab}`);
+                btn.classList.remove('text-doom-accent', 'font-bold');
+                btn.classList.add('text-zinc-400');
+            });
+
+            if (tabId === 'messages') {
+                document.getElementById('screen-messages').classList.remove('hidden');
+                document.getElementById(`tab-messages`).classList.add('text-doom-accent', 'font-bold');
+                scrollToBottom();
+            } else if (tabId === 'help') {
+                document.getElementById('screen-help').classList.remove('hidden');
+                document.getElementById(`tab-help`).classList.add('text-doom-accent', 'font-bold');
+            }
+        }
+
+        function toggleWidgetFaq(id) {
+            const content = document.getElementById(`widget-faq-content-${id}`);
+            const arrow = document.getElementById(`widget-faq-arrow-${id}`);
+            
+            const isOpen = !content.classList.contains('hidden');
+            
+            // Close all first to keep it super tidy
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`widget-faq-content-${i}`).classList.add('hidden');
+                document.getElementById(`widget-faq-arrow-${i}`).style.transform = 'rotate(0deg)';
+            }
+
+            if (!isOpen) {
+                content.classList.remove('hidden');
+                arrow.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        function appendMessage(sender, text) {
+            const messageList = document.getElementById('message-list');
+            const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            let msgHtml = '';
+            if (sender === 'user') {
+                msgHtml = `
+                <div class="flex flex-col space-y-1 items-end max-w-[85%] self-end animate-fade-in">
+                    <span class="text-[10px] text-zinc-400 font-semibold mr-2">You</span>
+                    <div class="bg-doom-accent text-white text-sm p-3.5 rounded-2xl rounded-tr-none shadow-sm leading-relaxed">
+                    ${text}
+                    </div>
+                    <span class="text-[10px] text-zinc-400 font-medium mr-2 self-end">${timestamp}</span>
+                </div>
+                `;
+            } else {
+                msgHtml = `
+                <div class="flex flex-col space-y-1 items-start max-w-[85%] self-start animate-fade-in">
+                    <span class="text-[10px] text-zinc-400 font-semibold ml-2">Boris</span>
+                    <div class="bg-white border border-teal-50 text-zinc-800 text-sm p-3.5 rounded-2xl rounded-tl-none shadow-sm leading-relaxed">
+                    ${text}
+                    </div>
+                    <span class="text-[10px] text-zinc-400 font-medium ml-2 self-start">${timestamp}</span>
+                </div>
+                `;
+            }
+
+            messageList.insertAdjacentHTML('beforeend', msgHtml);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('chat-messages-container');
+            setTimeout(() => {
+                container.scrollTop = container.scrollHeight;
+            }, 50);
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = '';
+
+            appendMessage('user', text);
+            triggerBorisResponse(text);
+        }
+
+        function triggerBorisResponse(userText) {
+            const typingIndicator = document.getElementById('typing-indicator');
+            typingIndicator.classList.remove('hidden');
+            scrollToBottom();
+
+            let matchReply = suggestedResponses["default"];
+            const lowerText = userText.toLowerCase();
+
+            for (let key in suggestedResponses) {
+                if (lowerText.includes(key.toLowerCase()) || key.toLowerCase().includes(lowerText)) {
+                matchReply = suggestedResponses[key];
+                break;
+                }
+            }
+
+            setTimeout(() => {
+                typingIndicator.classList.add('hidden');
+                appendMessage('agent', matchReply);
+            }, 1200);
+        }
+
+        function handleQuickReply(topic) {
+            appendMessage('user', topic);
+            triggerBorisResponse(topic);
+        }
+
+        // Initialize Chat Widget tab states
+        switchTab('messages');
+
+    </script>
+</body>
+</html>
