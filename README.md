@@ -27,7 +27,7 @@ Vertex is a **complete, production-ready landing page** built with vanilla HTML,
 <br />
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/shrils/vertex/main/docs/hero-preview.svg" alt="Hero section preview" width="800" />
+  <img src="https://raw.githubusercontent.com/Shrils/vertex/main/docs/hero-preview.svg" alt="Hero section preview" width="800" />
 </p>
 
 <br />
@@ -94,7 +94,7 @@ Vertex is a **complete, production-ready landing page** built with vanilla HTML,
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/shrils/vertex.git
+git clone https://github.com/Shrils/vertex.git
 cd vertex
 
 # 2. Install dependencies
