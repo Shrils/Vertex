@@ -29,7 +29,7 @@ Vertex is a **complete, production-ready landing page** built with vanilla HTML,
 
 ## Live Preview
 
-**https://shrils.github.io/Vertex/**
+**Live Preview** -- <a href="https://shrils.github.io/Vertex/">(Click Here)</a>
 
 See the landing page in action before you clone it. The live demo shows the full experience -- rotating hero text, strategy cards with charts, addons marketplace, and newsletter signup.
 
